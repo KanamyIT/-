@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NeuroTrans Pro 🚀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Глобальные стили */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+
+        /* Шапка */
+        header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo { font-size: 24px; font-weight: 700; color: #2b6cb0; letter-spacing: -1px; }
+        .logo span { color: #4fd1c5; }
+
+        nav button {
+            background: transparent;
+            border: none;
+            color: #4a5568;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        nav button:hover { color: #2b6cb0; }
+        nav button.active-nav { color: #2b6cb0; border-bottom: 2px solid #2b6cb0; }
+
+        /* Контейнер */
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+
+        /* Карточка ввода */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        h2 { margin-top: 0; color: #2d3748; }
+        .subtitle { color: #718096; margin-bottom: 30px; }
+
+        /* Поле ввода и кнопка */
+        .input-wrapper { display: flex; gap: 10px; flex-wrap: wrap; }
+        input[type="text"] {
+            flex: 1;
+            padding: 16px 20px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus { border-color: #2b6cb0; }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #2b6cb0 0%, #4299e1 100%);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(43, 108, 176, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(43, 108, 176, 0.4); }
+        .btn-primary:active { transform: translateY(0); }
+
+        /* Результат и табы */
+        .result-container { display: none; animation: slideUp 0.5s ease; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #edf2f7;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #718096;
+            transition: 0.2s;
+        }
+        .tab-btn.active { background: #2b6cb0; color: white; }
+
+        .text-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            white-space: pre-wrap; /* Сохраняет абзацы */
+            line-height: 1.8;
+            font-size: 17px;
+            color: #2d3748;
+            min-height: 200px;
+            position: relative;
+        }
+
+        .stats-badge {
+            display: inline-block;
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        /* Загрузка */
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2b6cb0;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Скрытые секции */
+        .section { display: none; }
+        .section.active { display: block; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">Neuro<span>Trans</span></div>
+    <nav>
+        <button onclick="switchPage('home')" class="active-nav" id="nav-home">Главная</button>
+        <button onclick="switchPage('about')" id="nav-about">О проекте</button>
+    </nav>
+</header>
+
+<div class="container">
+    
+    <!-- СТРАНИЦА ПЕРЕВОДА -->
+    <div id="home" class="section active">
+        <div class="card">
+            <h2>Переводи знания мгновенно 🧠</h2>
+            <p class="subtitle">Вставь ссылку на любую статью, и нейросеть переведет её полностью.</p>
+            
+            <div class="input-wrapper">
+                <input type="text" id="urlInput" placeholder="Вставьте ссылку (https://...)" />
+                <button class="btn-primary" onclick="startProcess()">Перевести 🔥</button>
+            </div>
+            <div class="loader" id="loader"></div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div id="statsBadge" class="stats-badge">Готово за 0.0 сек</div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('ru')" id="btn-ru">🇷🇺 Перевод</button>
+                <button class="tab-btn" onclick="showTab('en')" id="btn-en">🇬🇧 Оригинал</button>
+            </div>
+
+            <div class="text-content" id="textContent">
+                <!-- Текст появится здесь -->
+            </div>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА О НАС -->
+    <div id="about" class="section">
+        <div class="card">
+            <h2>Кто мы? 😎</h2>
+            <p>Этот проект создан <b>Арсением и Ваней</b>.</p>
+            <p>Мы решили, что читать иностранные статьи должно быть легко. Наш бэкенд использует продвинутые алгоритмы парсинга, чтобы собрать весь текст со страницы, и нейросетевой переводчик Google API для точного результата.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let globalData = { original: "", translated: "" };
+
+    function switchPage(pageId) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active-nav'));
+        document.getElementById('nav-' + pageId).classList.add('active-nav');
+    }
+
+    async function startProcess() {
+        const url = document.getElementById('urlInput').value;
+        const loader = document.getElementById('loader');
+        const resultContainer = document.getElementById('resultContainer');
+        
+        if (!url) { alert("Нужна ссылка!"); return; }
+
+        loader.style.display = 'block';
+        resultContainer.style.display = 'none';
+
+        try {
+            const response = await fetch('http://192.168.1.6:8001/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert("Ошибка: " + data.error);
+            } else {
+                globalData.original = data.original;
+                globalData.translated = data.translated;
+                
+                document.getElementById('statsBadge').innerText = data.stats;
+                document.getElementById('textContent').innerText = data.translated;
+                
+                // Сброс табов на перевод
+                showTab('ru');
+                resultContainer.style.display = 'block';
+            }
+
+        } catch (e) {
+            alert("Сервер не отвечает! Запусти server.py");
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    function showTab(lang) {
+        const textField = document.getElementById('textContent');
+        const btnRu = document.getElementById('btn-ru');
+        const btnEn = document.getElementById('btn-en');
+
+        if (lang === 'ru') {
+            textField.innerText = globalData.translated;
+            btnRu.classList.add('active');
+            btnEn.classList.remove('active');
+        } else {
+            textField.innerText = globalData.original;
+            btnEn.classList.add('active');
+            btnRu.classList.remove('active');
+        }
+    }
+</script>
+
+</body>
+</html>
+
