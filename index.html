@@ -30,7 +30,7 @@
         }
 
         .logo { font-size: 24px; font-weight: 700; color: #2b6cb0; letter-spacing: -1px; }
-        .logo span { color: #4fd1c5; }
+        .logo span { color: #111f1d; }
 
         nav button {
             background: transparent;
@@ -218,7 +218,7 @@
         <div class="card">
             <h2>Кто мы? 😎</h2>
             <p>Этот проект создан <b>Арсением и Ваней</b>.</p>
-            <p>Мы решили, что читать иностранные статьи должно быть легко. Сайт использует CORS-прокси для загрузки страниц и бесплатный API MyMemory для перевода — всё работает прямо в браузере без сервера!</p>
+            <p>Мы решили, что читать иностранные статьи должно быть легко. Сайт использует Google Translate через Lingva API — всё работает прямо в браузере без сервера!</p>
         </div>
     </div>
 
@@ -378,7 +378,7 @@
     async function translateChunk(text, targetLang) {
         if (!text || text.length < 3) return text;
         
-        // Пробуем несколько Google Translate зеркал
+        // Google Translate через Lingva зеркала (идентично deep_translator)
         const mirrors = [
             `https://lingva.ml/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
             `https://lingva.lunar.icu/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
@@ -400,15 +400,7 @@
             }
         }
         
-        // Fallback на MyMemory если Google не работает
-        try {
-            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            if (data.responseData) return data.responseData.translatedText;
-        } catch (err) {}
-        
-        return text;
+        throw new Error('Не удалось перевести текст. Попробуйте позже.');
     }
 
     function splitText(text, maxLen) {
