@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeuroTrans Pro 🚀</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -118,6 +119,8 @@
             color: #2d3748;
             min-height: 200px;
             position: relative;
+            text-align: left;
+            word-wrap: break-word; /* Чтобы длинные слова не ломали верстку */
         }
 
         .stats-badge {
@@ -148,6 +151,17 @@
         /* Скрытые секции */
         .section { display: none; }
         .section.active { display: block; }
+        
+        /* Адаптив для телефонов */
+        @media (max-width: 600px) {
+            .container { margin: 20px auto; }
+            .card { padding: 20px; }
+            h2 { font-size: 20px; }
+            .btn-primary { width: 100%; margin-top: 10px; }
+            header { padding: 10px 15px; }
+            .logo { font-size: 20px; }
+            nav button { padding: 5px 10px; font-size: 14px; }
+        }
 
     </style>
 </head>
@@ -195,13 +209,16 @@
         <div class="card">
             <h2>Кто мы? 😎</h2>
             <p>Этот проект создан <b>Арсением и Ваней</b>.</p>
-            <p>Мы решили, что читать иностранные статьи должно быть легко. Наш бэкенд использует продвинутые алгоритмы парсинга, чтобы собрать весь текст со страницы, и нейросетевой переводчик Google API для точного результата.</p>
+            <p>Мы используем облачный сервер на Render и нейросетевой переводчик для работы с любыми статьями. Наш бэкенд умеет обходить защиту многих сайтов и скачивать полный текст для перевода.</p>
         </div>
     </div>
 
 </div>
 
 <script>
+    // ТВОЙ ОБЛАЧНЫЙ СЕРВЕР (Render)
+    const API_URL = 'https://my-translator-zvrl.onrender.com/translate';
+
     let globalData = { original: "", translated: "" };
 
     function switchPage(pageId) {
@@ -223,7 +240,10 @@
         resultContainer.style.display = 'none';
 
         try {
-            const response = await fetch('http://192.168.1.6:8001/translate', {
+            // ВАЖНО: Добавил обработку для Render, так как он может спать
+            console.log("Отправляем запрос на: " + API_URL);
+            
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: url })
@@ -246,7 +266,8 @@
             }
 
         } catch (e) {
-            alert("Сервер не отвечает! Запусти server.py");
+            console.error(e);
+            alert("Ошибка соединения с облаком! Возможно, Render 'спит'. Попробуй нажать кнопку еще раз через 30 секунд (бесплатный тариф долго просыпается).");
         } finally {
             loader.style.display = 'none';
         }
@@ -271,4 +292,3 @@
 
 </body>
 </html>
-
