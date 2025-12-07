@@ -89,6 +89,7 @@
         }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(43, 108, 176, 0.4); }
         .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         /* Результат и табы */
         .result-container { display: none; animation: slideUp 0.5s ease; }
@@ -112,12 +113,14 @@
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            white-space: pre-wrap; /* Сохраняет абзацы */
+            white-space: pre-wrap;
             line-height: 1.8;
             font-size: 17px;
             color: #2d3748;
             min-height: 200px;
             position: relative;
+            max-height: 500px;
+            overflow-y: auto;
         }
 
         .stats-badge {
@@ -142,6 +145,13 @@
             margin: 20px auto;
         }
 
+        .progress-info {
+            display: none;
+            color: #718096;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -149,6 +159,19 @@
         .section { display: none; }
         .section.active { display: block; }
 
+        /* Кнопка копирования */
+        .copy-btn {
+            background: #edf2f7;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4a5568;
+            margin-top: 15px;
+            transition: 0.2s;
+        }
+        .copy-btn:hover { background: #e2e8f0; }
     </style>
 </head>
 <body>
@@ -171,9 +194,10 @@
             
             <div class="input-wrapper">
                 <input type="text" id="urlInput" placeholder="Вставьте ссылку (https://...)" />
-                <button class="btn-primary" onclick="startProcess()">Перевести 🔥</button>
+                <button class="btn-primary" id="translateBtn" onclick="startProcess()">Перевести 🔥</button>
             </div>
             <div class="loader" id="loader"></div>
+            <div class="progress-info" id="progressInfo">Загрузка...</div>
         </div>
 
         <div class="result-container" id="resultContainer">
@@ -184,9 +208,8 @@
                 <button class="tab-btn" onclick="showTab('en')" id="btn-en">🇬🇧 Оригинал</button>
             </div>
 
-            <div class="text-content" id="textContent">
-                <!-- Текст появится здесь -->
-            </div>
+            <div class="text-content" id="textContent"></div>
+            <button class="copy-btn" onclick="copyText()">📋 Копировать текст</button>
         </div>
     </div>
 
@@ -195,14 +218,25 @@
         <div class="card">
             <h2>Кто мы? 😎</h2>
             <p>Этот проект создан <b>Арсением и Ваней</b>.</p>
-            <p>Мы решили, что читать иностранные статьи должно быть легко. Наш бэкенд использует продвинутые алгоритмы парсинга, чтобы собрать весь текст со страницы, и нейросетевой переводчик Google API для точного результата.</p>
+            <p>Мы решили, что читать иностранные статьи должно быть легко. Сайт использует CORS-прокси для загрузки страниц и бесплатный API MyMemory для перевода — всё работает прямо в браузере без сервера!</p>
         </div>
     </div>
 
 </div>
 
 <script>
+    // Конфигурация
+    const CONFIG = {
+        corsProxies: [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?'
+        ],
+        translationAPI: 'https://api.mymemory.translated.net/get',
+        maxChunkSize: 450
+    };
+
     let globalData = { original: "", translated: "" };
+    let isLoading = false;
 
     function switchPage(pageId) {
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
@@ -212,44 +246,168 @@
         document.getElementById('nav-' + pageId).classList.add('active-nav');
     }
 
+    function setLoading(loading, message = 'Загрузка...') {
+        isLoading = loading;
+        document.getElementById('loader').style.display = loading ? 'block' : 'none';
+        document.getElementById('progressInfo').style.display = loading ? 'block' : 'none';
+        document.getElementById('progressInfo').textContent = message;
+        document.getElementById('translateBtn').disabled = loading;
+    }
+
     async function startProcess() {
-        const url = document.getElementById('urlInput').value;
-        const loader = document.getElementById('loader');
+        const url = document.getElementById('urlInput').value.trim();
         const resultContainer = document.getElementById('resultContainer');
         
         if (!url) { alert("Нужна ссылка!"); return; }
+        if (!isValidUrl(url)) { alert("Введите корректную ссылку!"); return; }
+        if (isLoading) return;
 
-        loader.style.display = 'block';
+        setLoading(true, '📥 Загружаем страницу...');
         resultContainer.style.display = 'none';
+        const startTime = Date.now();
 
         try {
-            const response = await fetch('http://192.168.1.6:8001/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url })
-            });
-
-            const data = await response.json();
-
-            if (data.error) {
-                alert("Ошибка: " + data.error);
-            } else {
-                globalData.original = data.original;
-                globalData.translated = data.translated;
-                
-                document.getElementById('statsBadge').innerText = data.stats;
-                document.getElementById('textContent').innerText = data.translated;
-                
-                // Сброс табов на перевод
-                showTab('ru');
-                resultContainer.style.display = 'block';
+            // 1. Загружаем страницу через CORS-прокси
+            const html = await fetchPage(url);
+            setLoading(true, '🔍 Извлекаем текст...');
+            
+            // 2. Парсим контент
+            const content = parseContent(html);
+            if (!content.text || content.text.length < 50) {
+                throw new Error('Не удалось извлечь текст со страницы');
             }
+            
+            globalData.original = content.text;
+            setLoading(true, '🌐 Переводим текст...');
+            
+            // 3. Переводим
+            const translated = await translateText(content.text, 'ru');
+            globalData.translated = translated;
+            
+            // 4. Показываем результат
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+            const wordCount = translated.split(/\s+/).filter(w => w.length > 0).length;
+            
+            document.getElementById('statsBadge').innerText = `Переведено ${wordCount} слов за ${duration} сек.`;
+            document.getElementById('textContent').innerText = translated;
+            
+            showTab('ru');
+            resultContainer.style.display = 'block';
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
 
         } catch (e) {
-            alert("Сервер не отвечает! Запусти server.py");
+            console.error('Error:', e);
+            alert("Ошибка: " + e.message);
         } finally {
-            loader.style.display = 'none';
+            setLoading(false);
         }
+    }
+
+    // Загрузка страницы через CORS-прокси
+    async function fetchPage(url) {
+        for (const proxy of CONFIG.corsProxies) {
+            try {
+                const proxyUrl = proxy + encodeURIComponent(url);
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                
+                const html = await response.text();
+                if (html.length < 100) throw new Error('Пустой ответ');
+                
+                return html;
+            } catch (err) {
+                console.warn('Proxy failed:', proxy, err.message);
+                continue;
+            }
+        }
+        throw new Error('Не удалось загрузить страницу. Попробуйте другую ссылку.');
+    }
+
+    // Парсинг контента из HTML
+    function parseContent(html) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Удаляем ненужное
+        ['script', 'style', 'nav', 'header', 'footer', 'aside', 'noscript'].forEach(tag => {
+            doc.querySelectorAll(tag).forEach(el => el.remove());
+        });
+        
+        // Ищем основной контент
+        let content = doc.querySelector('article') || 
+                      doc.querySelector('main') || 
+                      doc.querySelector('.content') ||
+                      doc.querySelector('.post-content') ||
+                      doc.querySelector('.article-content') ||
+                      doc.body;
+        
+        // Собираем текст из параграфов
+        let text = '';
+        content.querySelectorAll('p, h1, h2, h3, h4, li').forEach(el => {
+            const t = el.textContent.trim();
+            if (t && t.length > 10) text += t + '\n\n';
+        });
+        
+        // Если мало текста, берём весь
+        if (text.length < 300) {
+            text = content.textContent.replace(/\s+/g, ' ').trim();
+        }
+        
+        return { text: text.substring(0, 15000) };
+    }
+
+    // Перевод текста через MyMemory API
+    async function translateText(text, targetLang) {
+        const chunks = splitText(text, CONFIG.maxChunkSize);
+        const translated = [];
+        
+        for (let i = 0; i < chunks.length; i++) {
+            setLoading(true, `🌐 Переводим... ${i + 1}/${chunks.length}`);
+            
+            const result = await translateChunk(chunks[i], targetLang);
+            translated.push(result);
+            
+            // Пауза между запросами чтобы не забанили
+            if (i < chunks.length - 1) await sleep(300);
+        }
+        
+        return translated.join('\n\n');
+    }
+
+    async function translateChunk(text, targetLang) {
+        if (!text || text.length < 3) return text;
+        
+        try {
+            const url = `${CONFIG.translationAPI}?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.responseStatus === 200 && data.responseData) {
+                return data.responseData.translatedText;
+            }
+            return text;
+        } catch (err) {
+            console.warn('Translation failed:', err);
+            return text;
+        }
+    }
+
+    function splitText(text, maxLen) {
+        const chunks = [];
+        const paragraphs = text.split('\n\n');
+        let current = '';
+        
+        for (const para of paragraphs) {
+            if ((current + '\n\n' + para).length > maxLen) {
+                if (current) chunks.push(current.trim());
+                current = para;
+            } else {
+                current = current ? current + '\n\n' + para : para;
+            }
+        }
+        if (current) chunks.push(current.trim());
+        
+        return chunks;
     }
 
     function showTab(lang) {
@@ -267,6 +425,31 @@
             btnRu.classList.remove('active');
         }
     }
+
+    function copyText() {
+        const text = document.getElementById('textContent').innerText;
+        navigator.clipboard.writeText(text)
+            .then(() => alert('Скопировано!'))
+            .catch(() => alert('Ошибка копирования'));
+    }
+
+    function isValidUrl(str) {
+        try {
+            const url = new URL(str);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Enter для отправки
+    document.getElementById('urlInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') startProcess();
+    });
 </script>
 
 </body>
