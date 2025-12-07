@@ -29,9 +29,7 @@
         
         .hero { text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 20px; margin-bottom: 30px; }
         .hero h1 { font-size: 28px; margin-bottom: 10px; }
-        .hero p { color: #888; font-size: 14px; margin-bottom: 20px; }
-
-        /* Вкладки (Ссылка / Текст) */
+        
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #eee; cursor: pointer; font-weight: 600; color: #555; }
         .tab-btn.active { background: var(--accent); color: white; }
@@ -49,7 +47,6 @@
         /* Категории */
         .categories { display: flex; gap: 8px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;}
         .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; background: var(--card-bg); font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px;}
-        .cat-btn:hover { border-color: var(--accent); }
         .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
         /* Лента */
@@ -60,14 +57,13 @@
         .news-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
 
         /* Результаты */
-        .article-view { background: var(--card-bg); padding: 40px; border-radius: 20px; margin-top: 30px; display: none; line-height: 1.7; }
+        .article-view { background: var(--card-bg); padding: 40px; border-radius: 20px; margin-top: 30px; display: none; line-height: 1.7; font-size: 18px; }
         .article-view img { max-width: 100%; border-radius: 8px; margin: 20px 0; display: block; }
-        .text-result { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-top: 20px; display: none; border-left: 4px solid var(--accent); white-space: pre-wrap; }
+        .text-result { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-top: 20px; display: none; border-left: 4px solid var(--accent); white-space: pre-wrap; font-size: 18px;}
 
         .loader { display: none; margin: 20px auto; width: 30px; height: 30px; border: 3px solid #ccc; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Факт */
         .fact-box { font-size: 12px; color: #888; margin-top: 20px; font-style: italic; }
     </style>
 </head>
@@ -82,88 +78,92 @@
     <div class="hero">
         <h1>Умный переводчик</h1>
         
-        <!-- Переключатель: Ссылка / Текст -->
+        <!-- Вкладки -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
             <button class="tab-btn" onclick="switchMode('text')">📝 Текст</button>
         </div>
 
-        <!-- Поле для ССЫЛКИ -->
+        <!-- Поле URL -->
         <div id="urlMode" class="input-area active">
             <input type="text" id="urlInput" placeholder="https://..." />
             <button class="btn-main" onclick="translateUrl()">Перевести сайт</button>
         </div>
 
-        <!-- Поле для ТЕКСТА -->
+        <!-- Поле ТЕКСТ -->
         <div id="textMode" class="input-area">
             <textarea id="textInput" placeholder="Вставьте английский текст сюда..."></textarea>
             <button class="btn-main" onclick="translateText()">Перевести текст</button>
         </div>
         
-        <div class="fact-box" id="factBox">Загрузка интересного факта...</div>
+        <div class="fact-box" id="factBox">...</div>
     </div>
 
-    <!-- Категории (без смайликов) -->
-    <div class="categories">
-        <button class="cat-btn active" onclick="loadCategory('programming', this)">Программирование</button>
-        <button class="cat-btn" onclick="loadCategory('history', this)">История</button>
-        <button class="cat-btn" onclick="loadCategory('gaming', this)">Игры</button>
-        <button class="cat-btn" onclick="loadCategory('movies', this)">Кино</button>
+    <!-- Блок новостей (скрывается в режиме Текст) -->
+    <div id="newsSection">
+        <div class="categories">
+            <button class="cat-btn active" onclick="loadCategory('programming', this)">Программирование</button>
+            <button class="cat-btn" onclick="loadCategory('history', this)">История</button>
+            <button class="cat-btn" onclick="loadCategory('gaming', this)">Игры</button>
+            <button class="cat-btn" onclick="loadCategory('movies', this)">Кино</button>
+        </div>
+        <div class="news-grid" id="newsGrid"></div>
     </div>
 
     <div class="loader" id="loader"></div>
     
-    <!-- Сетка новостей -->
-    <div class="news-grid" id="newsGrid"></div>
-
-    <!-- Результат (Статья) -->
+    <!-- Результаты -->
     <div id="result" class="article-view"></div>
-    
-    <!-- Результат (Текст) -->
     <div id="textResult" class="text-result"></div>
 </div>
 
 <script>
     const API = 'https://my-translator-zvrl.onrender.com';
-    
-    // Факты
     const facts = [
-        "Первый баг был настоящим жуком (moth), застрявшим в реле компьютера Mark II.",
-        "Python назван не в честь змеи, а в честь шоу 'Летающий цирк Монти Пайтона'.",
-        "Первый домен .com был зарегистрирован 15 марта 1985 года (symbolics.com).",
-        "Код Apollo 11 был написан вручную женщинами-программистами (Маргарет Гамильтон)."
+        "Первый баг был жуком в реле Mark II.", 
+        "Python назван в честь Монти Пайтона.", 
+        "Символ @ использовался еще в средние века.",
+        "Первый сайт в мире был запущен в 1991 году."
     ];
 
     window.onload = function() {
         document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
         loadCategory('programming', document.querySelector('.cat-btn.active'));
-        // Пинг сервера
-        fetch(API + '/').catch(() => console.log("Wake up!"));
+        fetch(API + '/').catch(console.error);
     };
 
-    function goHome() {
+    function resetView() {
         document.getElementById('result').style.display = 'none';
         document.getElementById('textResult').style.display = 'none';
+        document.getElementById('loader').style.display = 'none';
+        document.querySelector('.hero').style.display = 'block';
+    }
+
+    function goHome() {
+        resetView();
+        document.getElementById('newsSection').style.display = 'block';
         document.getElementById('newsGrid').style.display = 'grid';
-        document.querySelector('.categories').style.display = 'flex';
+        switchMode('url');
     }
 
     function switchMode(mode) {
+        resetView();
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.input-area').forEach(a => a.classList.remove('active'));
         
         if(mode === 'url') {
             document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
             document.getElementById('urlMode').classList.add('active');
+            document.getElementById('newsSection').style.display = 'block';
         } else {
             document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
             document.getElementById('textMode').classList.add('active');
+            document.getElementById('newsSection').style.display = 'none';
         }
     }
 
-    // Загрузка категорий
     async function loadCategory(cat, btn) {
-        goHome();
+        resetView();
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         if(btn) btn.classList.add('active');
         
@@ -176,6 +176,11 @@
             const data = await res.json();
             document.getElementById('loader').style.display = 'none';
             
+            if(!data.articles || data.articles.length === 0) {
+                 grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Новостей нет :(</p>";
+                 return;
+            }
+
             data.articles.forEach(art => {
                 const card = document.createElement('div');
                 card.className = 'news-card';
@@ -188,24 +193,16 @@
             });
         } catch(e) { 
             document.getElementById('loader').style.display = 'none';
-            grid.innerHTML = "<p style='text-align:center'>Сервер просыпается... ⏳</p>";
         }
     }
 
-    // Перевод ССЫЛКИ
     async function translateUrl(url = null) {
         const inputUrl = url || document.getElementById('urlInput').value;
-        if(!inputUrl) return alert("Где ссылка?");
+        if(!inputUrl) return alert("Введите ссылку!");
         
-        document.getElementById('newsGrid').style.display = 'none';
-        document.querySelector('.categories').style.display = 'none';
-        document.getElementById('textResult').style.display = 'none';
-        
-        const resDiv = document.getElementById('result');
-        const loader = document.getElementById('loader');
-        
-        resDiv.style.display = 'none';
-        loader.style.display = 'block';
+        document.getElementById('newsSection').style.display = 'none';
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
 
         try {
             const res = await fetch(API + '/translate', {
@@ -214,30 +211,22 @@
                 body: JSON.stringify({url: inputUrl})
             });
             const data = await res.json();
-            resDiv.innerHTML = data.translated_html;
-            resDiv.style.display = 'block';
+            document.getElementById('result').innerHTML = data.translated_html;
+            document.getElementById('result').style.display = 'block';
         } catch(e) {
             alert("Ошибка перевода.");
             goHome();
         } finally {
-            loader.style.display = 'none';
+            document.getElementById('loader').style.display = 'none';
         }
     }
 
-    // Перевод ТЕКСТА (Новая функция)
     async function translateText() {
         const text = document.getElementById('textInput').value;
         if(!text) return alert("Введите текст!");
         
-        const resDiv = document.getElementById('textResult');
-        const loader = document.getElementById('loader');
-        
-        document.getElementById('newsGrid').style.display = 'none';
-        document.querySelector('.categories').style.display = 'none';
-        document.getElementById('result').style.display = 'none';
-        
-        resDiv.style.display = 'none';
-        loader.style.display = 'block';
+        document.getElementById('textResult').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
 
         try {
             const res = await fetch(API + '/translate_text', {
@@ -246,12 +235,12 @@
                 body: JSON.stringify({text: text})
             });
             const data = await res.json();
-            resDiv.innerText = data.result;
-            resDiv.style.display = 'block';
+            document.getElementById('textResult').innerText = data.result;
+            document.getElementById('textResult').style.display = 'block';
         } catch(e) {
-            alert("Ошибка перевода текста.");
+            alert("Ошибка.");
         } finally {
-            loader.style.display = 'none';
+            document.getElementById('loader').style.display = 'none';
         }
     }
 </script>
