@@ -88,81 +88,8 @@
             .then(() => {
                 console.log("Сервер готов!");
                 document.getElementById('status').innerText = "Сервер готов к работе ✅";
-                loadFeed(); // Грузим новости фоном
+                // Загружаем ленту сразу, чтобы была готова
+                loadFeed();
             })
             .catch(() => {
-                document.getElementById('status').innerText = "Сервер просыпается (подождите 30 сек)... ⏳";
-            });
-    };
-
-    function showSection(id) {
-        document.querySelectorAll('.section').forEach(e => e.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-        if(id==='home') document.getElementById('btn-home').classList.add('active');
-        if(id==='feed') document.getElementById('btn-feed').classList.add('active');
-    }
-
-    async function translateUrl(url = null) {
-        const inputUrl = url || document.getElementById('urlInput').value;
-        if(!inputUrl) return alert("Ссылку в студию!");
-        
-        showSection('home');
-        document.getElementById('urlInput').value = inputUrl;
-        
-        const resDiv = document.getElementById('result');
-        const loader = document.getElementById('loader');
-        
-        loader.style.display = 'block';
-        resDiv.style.display = 'none';
-
-        try {
-            const res = await fetch(API + '/translate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url: inputUrl})
-            });
-            const data = await res.json();
-            
-            if(data.error) throw new Error(data.error);
-            
-            resDiv.innerHTML = data.translated_html;
-            resDiv.style.display = 'block';
-            resDiv.scrollIntoView({ behavior: 'smooth' });
-        } catch(e) {
-            alert("Ошибка: " + e.message + "\nПопробуй другую статью или подожди минуту.");
-        } finally {
-            loader.style.display = 'none';
-        }
-    }
-
-    async function loadFeed() {
-        const grid = document.getElementById('newsGrid');
-        if(grid.children.length > 0) return;
-        
-        const loader = document.getElementById('feedLoader');
-        loader.style.display = 'block';
-        
-        try {
-            const res = await fetch(API + '/feed');
-            const data = await res.json();
-            
-            grid.innerHTML = "";
-            data.articles.forEach(art => {
-                const card = document.createElement('div');
-                card.className = 'news-card';
-                card.innerHTML = `
-                    <div style="font-size: 12px; font-weight: 800; color: #718096; text-transform: uppercase;">${art.tag}</div>
-                    <div style="font-size: 16px; font-weight: 700; margin: 10px 0;">${art.title}</div>
-                    <div style="font-size: 13px; color: #718096;">${art.original_title}</div>
-                `;
-                card.onclick = () => translateUrl(art.link);
-                grid.appendChild(card);
-            });
-        } catch(e) { console.log("Ошибка ленты"); } 
-        finally { loader.style.display = 'none'; }
-    }
-</script>
-
-</body>
-</html>
+                document.getElementById('status').innerText = "Сер
