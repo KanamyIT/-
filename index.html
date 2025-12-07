@@ -10,8 +10,7 @@
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
             --text-main: #1a1a1a;
-            --accent: #FF4500; /* Яркий оранжево-красный */
-            --accent-hover: #e03e00;
+            --accent: #FF4500;
         }
         body.dark-mode {
             --bg-color: #121212;
@@ -20,231 +19,193 @@
         }
         body { font-family: 'Montserrat', sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; transition: 0.3s; }
         
-        /* Шапка */
-        header { 
-            background: var(--card-bg); 
-            padding: 15px 5%; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-            position: sticky; top: 0; z-index: 100; 
-        }
-        .logo { font-size: 22px; font-weight: 800; color: var(--text-main); cursor: pointer; display: flex; align-items: center; gap: 8px;}
+        header { background: var(--card-bg); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 22px; font-weight: 800; cursor: pointer; }
         .logo span { color: var(--accent); }
-        
-        .nav-btn { background: none; border: none; color: var(--text-main); font-weight: 600; padding: 10px 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; font-size: 14px;}
-        .nav-btn:hover { background: rgba(0,0,0,0.05); }
-        .nav-btn.active { color: var(--accent); }
+        .nav-btn { background: none; border: 2px solid transparent; color: var(--text-main); font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: 20px; font-size: 14px; transition: 0.2s; }
+        .nav-btn:hover { border-color: var(--accent); }
 
         .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        .section { display: none; animation: fade 0.3s; }
-        .section.active { display: block; }
         
-        /* ГЛАВНАЯ */
-        .hero { text-align: center; padding: 60px 20px; background: var(--card-bg); border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); margin-bottom: 40px;}
-        .hero h1 { font-size: 32px; margin-bottom: 10px; }
-        .hero p { color: #666; font-size: 16px; margin-bottom: 30px; }
+        .hero { text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 20px; margin-bottom: 30px; }
+        .hero h1 { font-size: 28px; margin-bottom: 10px; }
+        .hero p { color: #888; font-size: 14px; margin-bottom: 20px; }
+
+        /* Вкладки (Ссылка / Текст) */
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #eee; cursor: pointer; font-weight: 600; color: #555; }
+        .tab-btn.active { background: var(--accent); color: white; }
+
+        .input-area { display: none; }
+        .input-area.active { display: block; }
+
+        input, textarea { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; background: var(--bg-color); color: var(--text-main); box-sizing: border-box; font-family: inherit;}
+        textarea { resize: vertical; min-height: 100px; }
+        input:focus, textarea:focus { border-color: var(--accent); outline: none;}
         
-        .input-wrapper { display: flex; gap: 10px; justify-content: center; max-width: 600px; margin: 0 auto; flex-wrap: wrap;}
-        input { flex: 1; padding: 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; min-width: 250px; background: var(--bg-color); color: var(--text-main);}
-        input:focus { border-color: var(--accent); outline: none;}
-        .btn-main { background: var(--accent); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 16px;}
-        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 69, 0, 0.3); }
+        .btn-main { background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 15px; }
+        .btn-main:hover { opacity: 0.9; }
 
-        /* КАТЕГОРИИ */
-        .categories { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;}
-        .cat-btn { 
-            padding: 10px 20px; 
-            border-radius: 20px; 
-            border: 2px solid transparent; 
-            background: var(--card-bg); 
-            font-weight: 700; 
-            cursor: pointer; 
-            transition: 0.2s; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            color: var(--text-main);
-        }
-        .cat-btn:hover { transform: translateY(-2px); }
-        .cat-btn.active { background: var(--accent); color: white; box-shadow: 0 5px 15px rgba(255, 69, 0, 0.3); }
+        /* Категории */
+        .categories { display: flex; gap: 8px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;}
+        .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; background: var(--card-bg); font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px;}
+        .cat-btn:hover { border-color: var(--accent); }
+        .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* ЛЕНТА */
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-        .news-card { 
-            background: var(--card-bg); 
-            padding: 25px; 
-            border-radius: 16px; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            border: 1px solid rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; justify-content: space-between;
-            min-height: 180px;
-        }
-        .news-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--accent); }
-        
-        .tag-badge { 
-            display: inline-block; 
-            padding: 4px 10px; 
-            border-radius: 6px; 
-            background: rgba(255, 69, 0, 0.1); 
-            color: var(--accent); 
-            font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; 
-        }
-        .news-title { font-size: 18px; font-weight: 700; line-height: 1.4; margin-bottom: 10px; }
-        .news-meta { font-size: 13px; color: #888; margin-top: auto; }
+        /* Лента */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .news-card { background: var(--card-bg); padding: 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid transparent; }
+        .news-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .tag-badge { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 8px; }
+        .news-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
 
-        /* СТАТЬЯ */
-        .article-view { background: var(--card-bg); padding: 50px; border-radius: 20px; margin-top: 30px; line-height: 1.8; font-size: 18px; display: none;}
-        .article-view img { max-width: 100%; border-radius: 12px; margin: 30px 0; display: block; }
-        .article-view pre { background: #1a202c; color: #fff; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 14px;}
+        /* Результаты */
+        .article-view { background: var(--card-bg); padding: 40px; border-radius: 20px; margin-top: 30px; display: none; line-height: 1.7; }
+        .article-view img { max-width: 100%; border-radius: 8px; margin: 20px 0; display: block; }
+        .text-result { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-top: 20px; display: none; border-left: 4px solid var(--accent); white-space: pre-wrap; }
 
-        /* Loader */
-        .loader { display: none; margin: 40px auto; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        .loader { display: none; margin: 20px auto; width: 30px; height: 30px; border: 3px solid #ccc; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Факт */
+        .fact-box { font-size: 12px; color: #888; margin-top: 20px; font-style: italic; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo" onclick="goHome()">News/Translate <span>by Kanamy</span></div>
-    <nav>
-        <button class="nav-btn" onclick="toggleTheme()">🌙 Theme</button>
-    </nav>
+    <button class="nav-btn" onclick="document.body.classList.toggle('dark-mode')">🌙 Тема</button>
 </header>
 
 <div class="container">
-    
-    <!-- ГЛАВНАЯ (ПОИСК) -->
-    <div id="home" class="section active">
-        <div class="hero">
-            <h1>Читай мир без границ</h1>
-            <p>Вставь ссылку на любую статью или выбери тему ниже.</p>
-            
-            <div class="input-wrapper">
-                <input type="text" id="urlInput" placeholder="https://medium.com/..." />
-                <button class="btn-main" onclick="translateUrl()">Перевести</button>
-            </div>
-            
-            <div id="status" style="margin-top: 15px; font-size: 13px; color: #888; min-height: 20px;"></div>
+    <div class="hero">
+        <h1>Умный переводчик</h1>
+        
+        <!-- Переключатель: Ссылка / Текст -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
+            <button class="tab-btn" onclick="switchMode('text')">📝 Текст</button>
         </div>
 
-        <!-- КАТЕГОРИИ НОВОСТЕЙ -->
-        <div class="categories">
-            <button class="cat-btn active" onclick="loadCategory('programming', this)">💻 Кодинг</button>
-            <button class="cat-btn" onclick="loadCategory('history', this)">📜 История</button>
-            <button class="cat-btn" onclick="loadCategory('gaming', this)">🎮 Игры</button>
-            <button class="cat-btn" onclick="loadCategory('movies', this)">🎬 Кино</button>
+        <!-- Поле для ССЫЛКИ -->
+        <div id="urlMode" class="input-area active">
+            <input type="text" id="urlInput" placeholder="https://..." />
+            <button class="btn-main" onclick="translateUrl()">Перевести сайт</button>
         </div>
 
-        <div class="loader" id="loader"></div>
-        <div class="news-grid" id="newsGrid">
-            <!-- Сюда прилетят новости -->
+        <!-- Поле для ТЕКСТА -->
+        <div id="textMode" class="input-area">
+            <textarea id="textInput" placeholder="Вставьте английский текст сюда..."></textarea>
+            <button class="btn-main" onclick="translateText()">Перевести текст</button>
         </div>
-
-        <!-- ПРОСМОТР СТАТЬИ -->
-        <div id="result" class="article-view"></div>
+        
+        <div class="fact-box" id="factBox">Загрузка интересного факта...</div>
     </div>
 
+    <!-- Категории (без смайликов) -->
+    <div class="categories">
+        <button class="cat-btn active" onclick="loadCategory('programming', this)">Программирование</button>
+        <button class="cat-btn" onclick="loadCategory('history', this)">История</button>
+        <button class="cat-btn" onclick="loadCategory('gaming', this)">Игры</button>
+        <button class="cat-btn" onclick="loadCategory('movies', this)">Кино</button>
+    </div>
+
+    <div class="loader" id="loader"></div>
+    
+    <!-- Сетка новостей -->
+    <div class="news-grid" id="newsGrid"></div>
+
+    <!-- Результат (Статья) -->
+    <div id="result" class="article-view"></div>
+    
+    <!-- Результат (Текст) -->
+    <div id="textResult" class="text-result"></div>
 </div>
 
 <script>
     const API = 'https://my-translator-zvrl.onrender.com';
-    let currentCategory = 'programming';
+    
+    // Факты
+    const facts = [
+        "Первый баг был настоящим жуком (moth), застрявшим в реле компьютера Mark II.",
+        "Python назван не в честь змеи, а в честь шоу 'Летающий цирк Монти Пайтона'.",
+        "Первый домен .com был зарегистрирован 15 марта 1985 года (symbolics.com).",
+        "Код Apollo 11 был написан вручную женщинами-программистами (Маргарет Гамильтон)."
+    ];
 
-    // 1. Инициализация
     window.onload = function() {
-        const status = document.getElementById('status');
-        status.innerText = "Подключаемся к серверу...";
-        
-        fetch(API + '/')
-            .then(() => {
-                status.innerText = "Сервер готов ✅";
-                setTimeout(() => status.innerText = "", 3000); // Скрываем статус через 3 сек
-                loadCategory('programming', document.querySelector('.cat-btn.active')); // Грузим первую категорию
-            })
-            .catch(() => status.innerText = "Сервер просыпается... Подождите 30 сек ⏳");
+        document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
+        loadCategory('programming', document.querySelector('.cat-btn.active'));
+        // Пинг сервера
+        fetch(API + '/').catch(() => console.log("Wake up!"));
     };
 
     function goHome() {
         document.getElementById('result').style.display = 'none';
+        document.getElementById('textResult').style.display = 'none';
         document.getElementById('newsGrid').style.display = 'grid';
         document.querySelector('.categories').style.display = 'flex';
-        document.querySelector('.hero').style.display = 'block';
-        window.scrollTo(0,0);
     }
 
-    // 2. Загрузка категорий
-    async function loadCategory(category, btn) {
-        currentCategory = category;
+    function switchMode(mode) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.input-area').forEach(a => a.classList.remove('active'));
         
-        // Переключаем кнопки
+        if(mode === 'url') {
+            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+            document.getElementById('urlMode').classList.add('active');
+        } else {
+            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+            document.getElementById('textMode').classList.add('active');
+        }
+    }
+
+    // Загрузка категорий
+    async function loadCategory(cat, btn) {
+        goHome();
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         if(btn) btn.classList.add('active');
-
-        // Скрываем статью, показываем ленту
-        document.getElementById('result').style.display = 'none';
-        document.querySelector('.hero').style.display = 'block';
-        const grid = document.getElementById('newsGrid');
-        grid.style.display = 'grid';
-        grid.innerHTML = ""; // Чистим старое
         
-        const loader = document.getElementById('loader');
-        loader.style.display = 'block';
+        const grid = document.getElementById('newsGrid');
+        grid.innerHTML = "";
+        document.getElementById('loader').style.display = 'block';
 
         try {
-            // Запрашиваем с параметром ?category=...
-            const res = await fetch(`${API}/feed?category=${category}`);
+            const res = await fetch(`${API}/feed?category=${cat}`);
             const data = await res.json();
+            document.getElementById('loader').style.display = 'none';
             
-            loader.style.display = 'none';
-            
-            if(!data.articles || data.articles.length === 0) {
-                grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Новости не найдены :(</p>";
-                return;
-            }
-
             data.articles.forEach(art => {
                 const card = document.createElement('div');
                 card.className = 'news-card';
                 card.innerHTML = `
-                    <div>
-                        <span class="tag-badge">${art.tag}</span>
-                        <div class="news-title">${art.title}</div>
-                    </div>
-                    <div class="news-meta">
-                        ${art.original_title} <br><br>
-                        <span style="color:var(--accent); font-weight:bold">Читать →</span>
-                    </div>
+                    <div><span class="tag-badge">${art.tag}</span><div class="news-title">${art.title}</div></div>
+                    <div style="font-size:12px; color:#aaa">${art.original_title}</div>
                 `;
                 card.onclick = () => translateUrl(art.link);
                 grid.appendChild(card);
             });
-
-        } catch(e) {
-            console.error(e);
-            loader.style.display = 'none';
-            grid.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'>Ошибка загрузки. Сервер спит?</p>";
+        } catch(e) { 
+            document.getElementById('loader').style.display = 'none';
+            grid.innerHTML = "<p style='text-align:center'>Сервер просыпается... ⏳</p>";
         }
     }
 
-    // 3. Перевод
+    // Перевод ССЫЛКИ
     async function translateUrl(url = null) {
         const inputUrl = url || document.getElementById('urlInput').value;
-        if(!inputUrl) return alert("Введите ссылку!");
-
-        // Прячем всё лишнее, показываем лоадер
+        if(!inputUrl) return alert("Где ссылка?");
+        
         document.getElementById('newsGrid').style.display = 'none';
-        document.querySelector('.categories').style.display = 'none'; // Прячем кнопки категорий
-        // document.querySelector('.hero').style.display = 'none'; // Можно оставить поиск
+        document.querySelector('.categories').style.display = 'none';
+        document.getElementById('textResult').style.display = 'none';
         
         const resDiv = document.getElementById('result');
         const loader = document.getElementById('loader');
         
         resDiv.style.display = 'none';
         loader.style.display = 'block';
-        window.scrollTo(0,0);
 
         try {
             const res = await fetch(API + '/translate', {
@@ -253,22 +214,45 @@
                 body: JSON.stringify({url: inputUrl})
             });
             const data = await res.json();
-            
-            if(data.error) throw new Error(data.error);
-            
             resDiv.innerHTML = data.translated_html;
             resDiv.style.display = 'block';
-            
         } catch(e) {
-            alert("Ошибка перевода: " + e.message);
-            goHome(); // Вернуться назад если ошибка
+            alert("Ошибка перевода.");
+            goHome();
         } finally {
             loader.style.display = 'none';
         }
     }
 
-    function toggleTheme() {
-        document.body.classList.toggle('dark-mode');
+    // Перевод ТЕКСТА (Новая функция)
+    async function translateText() {
+        const text = document.getElementById('textInput').value;
+        if(!text) return alert("Введите текст!");
+        
+        const resDiv = document.getElementById('textResult');
+        const loader = document.getElementById('loader');
+        
+        document.getElementById('newsGrid').style.display = 'none';
+        document.querySelector('.categories').style.display = 'none';
+        document.getElementById('result').style.display = 'none';
+        
+        resDiv.style.display = 'none';
+        loader.style.display = 'block';
+
+        try {
+            const res = await fetch(API + '/translate_text', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: text})
+            });
+            const data = await res.json();
+            resDiv.innerText = data.result;
+            resDiv.style.display = 'block';
+        } catch(e) {
+            alert("Ошибка перевода текста.");
+        } finally {
+            loader.style.display = 'none';
+        }
     }
 </script>
 
