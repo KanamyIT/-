@@ -231,8 +231,9 @@
             'https://api.allorigins.win/raw?url=',
             'https://corsproxy.io/?'
         ],
-        translationAPI: 'https://api.mymemory.translated.net/get',
-        maxChunkSize: 450
+        // Используем Google Translate через Lingva (бесплатный open-source)
+        translationAPI: 'https://lingva.ml/api/v1',
+        maxChunkSize: 1000  // Lingva поддерживает больше текста
     };
 
     let globalData = { original: "", translated: "" };
@@ -377,19 +378,37 @@
     async function translateChunk(text, targetLang) {
         if (!text || text.length < 3) return text;
         
+        // Пробуем несколько Google Translate зеркал
+        const mirrors = [
+            `https://lingva.ml/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
+            `https://lingva.lunar.icu/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
+            `https://translate.plausibility.cloud/api/v1/en/${targetLang}/${encodeURIComponent(text)}`
+        ];
+        
+        for (const url of mirrors) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) continue;
+                
+                const data = await response.json();
+                if (data.translation) {
+                    return data.translation;
+                }
+            } catch (err) {
+                console.warn('Mirror failed:', url);
+                continue;
+            }
+        }
+        
+        // Fallback на MyMemory если Google не работает
         try {
-            const url = `${CONFIG.translationAPI}?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
             const response = await fetch(url);
             const data = await response.json();
-            
-            if (data.responseStatus === 200 && data.responseData) {
-                return data.responseData.translatedText;
-            }
-            return text;
-        } catch (err) {
-            console.warn('Translation failed:', err);
-            return text;
-        }
+            if (data.responseData) return data.responseData.translatedText;
+        } catch (err) {}
+        
+        return text;
     }
 
     function splitText(text, maxLen) {
@@ -454,4 +473,3 @@
 
 </body>
 </html>
-
