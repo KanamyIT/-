@@ -24,7 +24,6 @@ class LinkRequest(BaseModel):
 class TextRequest(BaseModel):
     text: str
 
-# НОВЫЕ РАБОЧИЕ ИСТОЧНИКИ
 RSS_SOURCES = {
     "programming": [
         "https://realpython.com/atom.xml",
@@ -39,7 +38,6 @@ RSS_SOURCES = {
         "https://www.polygon.com/rss/index.xml",
         "https://kotaku.com/rss"
     ],
-    # ИСПРАВЛЕНО: Рабочие ленты про кино
     "movies": [
         "https://variety.com/feed/",
         "https://deadline.com/feed/"
@@ -50,40 +48,35 @@ RSS_SOURCES = {
 async def root():
     return {"status": "Alive"}
 
-# --- ПЕРЕВОД ТЕКСТА ---
 @app.post("/translate_text")
 async def translate_raw_text(request: TextRequest):
     if not request.text: return {"error": "Empty text"}
     try:
         translator = GoogleTranslator(source='auto', target='ru')
-        # Ограничение 4500 символов
         translated = translator.translate(request.text[:4500])
         return {"result": translated}
     except Exception as e:
         return {"error": str(e)}
 
-# --- ПАРСИНГ СТАТЕЙ ---
 def translate_html_content(soup):
     translator = GoogleTranslator(source='auto', target='ru')
     content = None
-    # Умный поиск контента
     for selector in ['article', 'main', '.content', '.post-content', '.entry-content', '#content', 'body']:
         if selector.startswith('.'): content = soup.find(class_=selector[1:])
         elif selector.startswith('#'): content = soup.find(id=selector[1:])
         else: content = soup.find(selector)
         if content: break
     
-    if not content: return "<p>Не удалось найти контент :(</p>"
+    if not content: return "<p>Не удалось найти контент :(</p>", 0
 
-    # Чистка
     for junk in content(["script", "style", "iframe", "noscript", "svg", "form", "button", "nav", "footer"]):
         junk.decompose()
 
-    # Защита кода
     for block in content.find_all(['pre', 'code', 'kbd', 'samp']): 
         block['data-no-translate'] = 'true'
 
-    # Перевод текста
+    word_count = 0 # Считаем слова для времени чтения
+
     for node in content.find_all(text=True):
         original = str(node)
         if len(original.strip()) < 3: continue 
@@ -92,47 +85,39 @@ def translate_html_content(soup):
         if any('code' in c for c in parent.get('class', [])): continue
         if parent.get('data-no-translate'): continue
         if len(original) > 4000: continue
-        # Пропуск ключевых слов кода
-        if any(original.strip().startswith(kw) for kw in ['def ', 'class ', 'import ', 'from ', 'return ', 'public ', 'void ']): 
-            continue
+        if any(original.strip().startswith(kw) for kw in ['def ', 'class ', 'import ', 'from ', 'return ', 'public ', 'void ']): continue
         
         try:
             res = translator.translate(original)
             node.replace_with(res)
+            word_count += len(res.split())
         except: pass
 
-    # Картинки
     for img in content.find_all('img'):
         img['style'] = "max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; display: block;"
         if not img.get('src') and img.get('data-src'): img['src'] = img['data-src']
     
-    return content.prettify()
+    return content.prettify(), word_count
 
 @lru_cache(maxsize=20)
 def fetch_feed_category(category):
     urls = RSS_SOURCES.get(category, [])
     all_articles = []
     translator = GoogleTranslator(source='auto', target='ru')
-    
     for url in urls:
         try:
             resp = requests.get(url, timeout=4)
             soup = BeautifulSoup(resp.content, "xml")
             items = soup.find_all("item")[:3] or soup.find_all("entry")[:3]
-            
             for item in items:
                 title = item.find("title").text
                 link_tag = item.find("link")
-                if link_tag: 
-                    link = link_tag.text.strip() if link_tag.text else link_tag.get('href')
+                if link_tag: link = link_tag.text.strip() if link_tag.text else link_tag.get('href')
                 else: continue
-                
                 try: ru_title = translator.translate(title)
                 except: ru_title = title
-                
                 all_articles.append({"title": ru_title, "original_title": title, "link": link, "tag": category.upper()})
         except: continue
-            
     return all_articles
 
 @app.get("/feed")
@@ -150,8 +135,15 @@ async def translate_article(request: LinkRequest):
         try: soup = BeautifulSoup(response.text, 'lxml')
         except: soup = BeautifulSoup(response.text, 'html.parser')
         
-        final_html = translate_html_content(soup)
-        return {"translated_html": final_html}
+        final_html, words = translate_html_content(soup)
+        
+        # Считаем время: 200 слов в минуту
+        read_time = max(1, round(words / 200))
+        
+        return {
+            "translated_html": final_html,
+            "read_time": read_time
+        }
     except Exception as e:
         return {"error": str(e)}
 
