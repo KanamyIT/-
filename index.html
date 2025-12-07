@@ -10,167 +10,38 @@
             --bg-color: #f8f9fa;
             --card-bg: #ffffff;
             --text-main: #2d3748;
-            --text-sec: #718096;
-            --accent: #ff8c00; /* Оранжевый (Kanamy) */
-            --accent-hover: #e07b00;
+            --accent: #ff8c00;
         }
-
         body.dark-mode {
             --bg-color: #1a202c;
             --card-bg: #2d3748;
             --text-main: #edf2f7;
-            --text-sec: #a0aec0;
         }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            transition: 0.3s;
-        }
-
-        /* Шапка */
-        header {
-            background: var(--card-bg);
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo { font-size: 24px; font-weight: 800; color: var(--accent); cursor: pointer; letter-spacing: -0.5px; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; transition: 0.3s; }
         
-        nav { display: flex; gap: 10px; }
-        .nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: 0.2s;
-        }
-        .nav-btn:hover { background: rgba(255, 140, 0, 0.1); color: var(--accent); }
+        header { background: var(--card-bg); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 800; color: var(--accent); cursor: pointer; }
+        .nav-btn { background: none; border: none; color: var(--text-main); font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: 8px; }
         .nav-btn.active { background: var(--accent); color: white; }
-
+        
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
-
-        /* Секции */
-        .section { display: none; animation: fade 0.4s; }
+        .section { display: none; }
         .section.active { display: block; }
-
-        /* Главный экран (Поиск) */
-        .hero {
-            text-align: center;
-            padding: 50px 30px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
-        }
         
-        .hero h1 { margin-top: 0; font-size: 32px; }
-        .hero p { color: var(--text-sec); font-size: 18px; margin-bottom: 30px; }
-
-        .input-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .hero { text-align: center; padding: 50px 30px; background: var(--card-bg); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        input { flex: 1; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; width: 60%; margin-right: 10px; }
+        .btn-main { background: var(--accent); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; }
         
-        input {
-            flex: 1;
-            min-width: 250px;
-            padding: 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-            background: var(--bg-color);
-            color: var(--text-main);
-        }
-        input:focus { border-color: var(--accent); }
-        
-        .btn-main {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 16px 30px;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 16px;
-            transition: transform 0.2s;
-        }
-        .btn-main:hover { transform: translateY(-2px); background: var(--accent-hover); }
-
-        /* Лента новостей */
-        .news-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .news-card {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
-            transition: transform 0.2s;
-            cursor: pointer;
-            border-left: 4px solid var(--accent);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .news-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-        
-        .tag {
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: var(--text-sec);
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-        }
-        .news-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
-        .news-orig { font-size: 13px; color: var(--text-sec); font-style: italic; }
-
-        /* Просмотр статьи */
-        .article-view {
-            background: var(--card-bg);
-            padding: 50px;
-            border-radius: 20px;
-            margin-top: 30px;
-            line-height: 1.8;
-            font-size: 18px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-        }
-        
-        /* Стили контента статьи */
-        .article-view img { max-width: 100%; border-radius: 12px; margin: 30px 0; display: block; margin-left: auto; margin-right: auto; }
-        .article-view h1, .article-view h2 { color: var(--accent); margin-top: 40px; }
+        .article-view { background: var(--card-bg); padding: 40px; border-radius: 20px; margin-top: 30px; line-height: 1.8; font-size: 18px; }
+        .article-view img { max-width: 100%; border-radius: 12px; margin: 20px 0; display: block; margin: 0 auto; }
         .article-view pre { background: #1a202c; color: #edf2f7; padding: 20px; border-radius: 10px; overflow-x: auto; font-size: 14px; }
-        .article-view code { background: rgba(255, 140, 0, 0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; color: var(--accent); }
-        .article-view pre code { background: transparent; color: inherit; padding: 0; }
 
-        /* Лоадер */
-        .loader {
-            display: none;
-            margin: 40px auto;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--accent);
-            border-radius: 50%;
-            width: 40px; height: 40px;
-            animation: spin 1s linear infinite;
-        }
+        .loader { display: none; margin: 20px auto; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-
+        
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
+        .news-card { background: var(--card-bg); padding: 20px; border-radius: 15px; cursor: pointer; border-left: 4px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.2s; }
+        .news-card:hover { transform: translateY(-5px); }
     </style>
 </head>
 <body>
@@ -179,54 +50,62 @@
     <div class="logo" onclick="showSection('home')">Kanamy</div>
     <nav>
         <button class="nav-btn active" onclick="showSection('home')" id="btn-home">Переводчик</button>
-        <button class="nav-btn" onclick="loadFeed()" id="btn-feed">🔥 Лента</button>
+        <button class="nav-btn" onclick="showSection('feed')" id="btn-feed">🔥 Лента</button>
         <button class="nav-btn" onclick="document.body.classList.toggle('dark-mode')">🌙</button>
     </nav>
 </header>
 
 <div class="container">
-    
-    <!-- СЕКЦИЯ: ГЛАВНАЯ (ПОИСК) -->
     <div id="home" class="section active">
         <div class="hero">
             <h1>Kanamy Translate</h1>
-            <p>Умный переводчик IT-статей. Сохраняет код, картинки и смысл.</p>
-            <div class="input-group">
-                <input type="text" id="urlInput" placeholder="Вставь ссылку на статью (Medium, Dev.to...)" />
+            <p>Стабильный перевод статей. Сохраняем код, картинки и нервы.</p>
+            <div>
+                <input type="text" id="urlInput" placeholder="https://..." />
                 <button class="btn-main" onclick="translateUrl()">Перевести</button>
             </div>
             <div class="loader" id="loader"></div>
+            <div id="status" style="margin-top: 10px; font-size: 12px; color: #718096;"></div>
         </div>
         <div id="result" class="article-view" style="display: none;"></div>
     </div>
 
-    <!-- СЕКЦИЯ: ЛЕНТА -->
     <div id="feed" class="section">
-        <h2 style="text-align: center; margin-bottom: 30px;">Свежее из мира разработки</h2>
+        <h2 style="text-align: center">Свежие статьи</h2>
         <div class="loader" id="feedLoader"></div>
-        <div class="news-grid" id="newsGrid">
-            <!-- Сюда скрипт вставит карточки -->
-        </div>
+        <div class="news-grid" id="newsGrid"></div>
     </div>
-
 </div>
 
 <script>
-    // ТВОЙ СЕРВЕР НА RENDER
     const API = 'https://my-translator-zvrl.onrender.com';
+
+    // АВТО-ПРОБУЖДЕНИЕ СЕРВЕРА
+    window.onload = function() {
+        console.log("Будим сервер...");
+        document.getElementById('status').innerText = "Подключаемся к серверу...";
+        fetch(API + '/')
+            .then(() => {
+                console.log("Сервер готов!");
+                document.getElementById('status').innerText = "Сервер готов к работе ✅";
+                loadFeed(); // Грузим новости фоном
+            })
+            .catch(() => {
+                document.getElementById('status').innerText = "Сервер просыпается (подождите 30 сек)... ⏳";
+            });
+    };
 
     function showSection(id) {
         document.querySelectorAll('.section').forEach(e => e.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        
         document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-        if(id === 'home') document.getElementById('btn-home').classList.add('active');
-        if(id === 'feed') document.getElementById('btn-feed').classList.add('active');
+        if(id==='home') document.getElementById('btn-home').classList.add('active');
+        if(id==='feed') document.getElementById('btn-feed').classList.add('active');
     }
 
     async function translateUrl(url = null) {
         const inputUrl = url || document.getElementById('urlInput').value;
-        if(!inputUrl) return alert("Нужна ссылка!");
+        if(!inputUrl) return alert("Ссылку в студию!");
         
         showSection('home');
         document.getElementById('urlInput').value = inputUrl;
@@ -249,58 +128,39 @@
             
             resDiv.innerHTML = data.translated_html;
             resDiv.style.display = 'block';
-            
-            // Скролл к статье
             resDiv.scrollIntoView({ behavior: 'smooth' });
-
         } catch(e) {
-            alert("Ошибка: " + e.message + "\nВозможно, сервер просыпается. Попробуй через 30 сек.");
+            alert("Ошибка: " + e.message + "\nПопробуй другую статью или подожди минуту.");
         } finally {
             loader.style.display = 'none';
         }
     }
 
     async function loadFeed() {
-        showSection('feed');
         const grid = document.getElementById('newsGrid');
-        const loader = document.getElementById('feedLoader');
-        
-        // Если уже загружено, не грузим снова
         if(grid.children.length > 0) return;
-
+        
+        const loader = document.getElementById('feedLoader');
         loader.style.display = 'block';
+        
         try {
             const res = await fetch(API + '/feed');
             const data = await res.json();
             
             grid.innerHTML = "";
-            if(!data.articles || data.articles.length === 0) {
-                grid.innerHTML = "<p style='text-align:center'>Новости не найдены :(</p>";
-                return;
-            }
-
             data.articles.forEach(art => {
                 const card = document.createElement('div');
                 card.className = 'news-card';
                 card.innerHTML = `
-                    <div>
-                        <span class="tag">${art.tag}</span>
-                        <div class="news-title">${art.title}</div>
-                        <div class="news-orig">${art.original_title}</div>
-                    </div>
-                    <div style="margin-top: 15px; font-size: 14px; color: var(--accent); font-weight: bold;">
-                        Читать →
-                    </div>
+                    <div style="font-size: 12px; font-weight: 800; color: #718096; text-transform: uppercase;">${art.tag}</div>
+                    <div style="font-size: 16px; font-weight: 700; margin: 10px 0;">${art.title}</div>
+                    <div style="font-size: 13px; color: #718096;">${art.original_title}</div>
                 `;
-                // Клик по карточке запускает перевод
                 card.onclick = () => translateUrl(art.link);
                 grid.appendChild(card);
             });
-        } catch(e) {
-            grid.innerHTML = "<p style='text-align:center'>Ошибка загрузки ленты. Сервер спит?</p>";
-        } finally {
-            loader.style.display = 'none';
-        }
+        } catch(e) { console.log("Ошибка ленты"); } 
+        finally { loader.style.display = 'none'; }
     }
 </script>
 
