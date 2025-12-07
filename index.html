@@ -44,19 +44,30 @@
         .btn-main { background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 15px; }
         .btn-main:hover { opacity: 0.9; }
 
+        /* ИСТОРИЯ */
+        .history-box { text-align: left; margin-top: 20px; display: none; }
+        .history-title { font-size: 12px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 10px; }
+        .history-item { background: rgba(0,0,0,0.03); padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        .history-item:hover { background: rgba(0,0,0,0.06); }
+        .history-icon { font-size: 16px; }
+
         /* Категории */
         .categories { display: flex; gap: 8px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;}
         .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; background: var(--card-bg); font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px;}
         .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* Лента */
         .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .news-card { background: var(--card-bg); padding: 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid transparent; }
         .news-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .tag-badge { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 8px; }
         .news-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
 
-        /* Результаты */
+        /* ПАНЕЛЬ УПРАВЛЕНИЯ СТАТЬЕЙ */
+        .article-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .control-btn { background: none; border: 1px solid #ddd; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 5px; }
+        .control-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .read-time { font-size: 13px; color: #888; font-weight: 600; margin-left: auto; }
+
         .article-view { background: var(--card-bg); padding: 40px; border-radius: 20px; margin-top: 30px; display: none; line-height: 1.7; font-size: 18px; }
         .article-view img { max-width: 100%; border-radius: 8px; margin: 20px 0; display: block; }
         .text-result { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-top: 20px; display: none; border-left: 4px solid var(--accent); white-space: pre-wrap; font-size: 18px;}
@@ -77,20 +88,22 @@
 <div class="container">
     <div class="hero">
         <h1>Умный переводчик</h1>
-        
-        <!-- Вкладки -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
             <button class="tab-btn" onclick="switchMode('text')">📝 Текст</button>
         </div>
 
-        <!-- Поле URL -->
         <div id="urlMode" class="input-area active">
             <input type="text" id="urlInput" placeholder="https://..." />
             <button class="btn-main" onclick="translateUrl()">Перевести сайт</button>
+            
+            <!-- Блок Истории -->
+            <div id="historyBox" class="history-box">
+                <div class="history-title">Недавно смотрели:</div>
+                <div id="historyList"></div>
+            </div>
         </div>
 
-        <!-- Поле ТЕКСТ -->
         <div id="textMode" class="input-area">
             <textarea id="textInput" placeholder="Вставьте английский текст сюда..."></textarea>
             <button class="btn-main" onclick="translateText()">Перевести текст</button>
@@ -99,7 +112,6 @@
         <div class="fact-box" id="factBox">...</div>
     </div>
 
-    <!-- Блок новостей (скрывается в режиме Текст) -->
     <div id="newsSection">
         <div class="categories">
             <button class="cat-btn active" onclick="loadCategory('programming', this)">Программирование</button>
@@ -112,23 +124,29 @@
 
     <div class="loader" id="loader"></div>
     
-    <!-- Результаты -->
-    <div id="result" class="article-view"></div>
+    <!-- Результат СТАТЬИ -->
+    <div id="result" class="article-view">
+        <div class="article-controls">
+            <button class="control-btn" onclick="speakText()">🔊 Слушать</button>
+            <button class="control-btn" onclick="stopSpeak()">⏹ Стоп</button>
+            <span class="read-time" id="readTime">⏱ 5 мин</span>
+        </div>
+        <div id="articleContent"></div>
+    </div>
+
+    <!-- Результат ТЕКСТА -->
     <div id="textResult" class="text-result"></div>
 </div>
 
 <script>
     const API = 'https://my-translator-zvrl.onrender.com';
-    const facts = [
-        "Первый баг был жуком в реле Mark II.", 
-        "Python назван в честь Монти Пайтона.", 
-        "Символ @ использовался еще в средние века.",
-        "Первый сайт в мире был запущен в 1991 году."
-    ];
+    const facts = ["Первый баг был жуком в реле Mark II.", "Python назван в честь Монти Пайтона.", "Символ @ использовался еще в средние века."];
+    let isSpeaking = false;
 
     window.onload = function() {
         document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
         loadCategory('programming', document.querySelector('.cat-btn.active'));
+        renderHistory();
         fetch(API + '/').catch(console.error);
     };
 
@@ -137,6 +155,7 @@
         document.getElementById('textResult').style.display = 'none';
         document.getElementById('loader').style.display = 'none';
         document.querySelector('.hero').style.display = 'block';
+        stopSpeak(); // Остановить звук при уходе
     }
 
     function goHome() {
@@ -160,6 +179,40 @@
             document.getElementById('textMode').classList.add('active');
             document.getElementById('newsSection').style.display = 'none';
         }
+    }
+
+    // --- ИСТОРИЯ ---
+    function saveToHistory(url) {
+        let history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
+        // Убираем дубликат, если есть, и добавляем в начало
+        history = history.filter(item => item !== url);
+        history.unshift(url);
+        if(history.length > 3) history.pop(); // Храним только 3 последних
+        localStorage.setItem('kanamyHistory', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        const box = document.getElementById('historyBox');
+        const history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
+        
+        if(history.length === 0) {
+            box.style.display = 'none';
+            return;
+        }
+        
+        box.style.display = 'block';
+        list.innerHTML = "";
+        history.forEach(url => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            // Обрезаем длинную ссылку
+            const shortUrl = url.length > 40 ? url.substring(0, 40) + '...' : url;
+            item.innerHTML = `<span class="history-icon">🕒</span> ${shortUrl}`;
+            item.onclick = () => translateUrl(url);
+            list.appendChild(item);
+        });
     }
 
     async function loadCategory(cat, btn) {
@@ -191,14 +244,14 @@
                 card.onclick = () => translateUrl(art.link);
                 grid.appendChild(card);
             });
-        } catch(e) { 
-            document.getElementById('loader').style.display = 'none';
-        }
+        } catch(e) { document.getElementById('loader').style.display = 'none'; }
     }
 
     async function translateUrl(url = null) {
         const inputUrl = url || document.getElementById('urlInput').value;
         if(!inputUrl) return alert("Введите ссылку!");
+        
+        saveToHistory(inputUrl); // Сохраняем в историю
         
         document.getElementById('newsSection').style.display = 'none';
         document.getElementById('result').style.display = 'none';
@@ -211,7 +264,10 @@
                 body: JSON.stringify({url: inputUrl})
             });
             const data = await res.json();
-            document.getElementById('result').innerHTML = data.translated_html;
+            
+            document.getElementById('articleContent').innerHTML = data.translated_html;
+            document.getElementById('readTime').innerText = `⏱ ${data.read_time} мин`;
+            
             document.getElementById('result').style.display = 'block';
         } catch(e) {
             alert("Ошибка перевода.");
@@ -237,11 +293,29 @@
             const data = await res.json();
             document.getElementById('textResult').innerText = data.result;
             document.getElementById('textResult').style.display = 'block';
-        } catch(e) {
-            alert("Ошибка.");
-        } finally {
-            document.getElementById('loader').style.display = 'none';
-        }
+        } catch(e) { alert("Ошибка."); } 
+        finally { document.getElementById('loader').style.display = 'none'; }
+    }
+
+    // --- ОЗВУЧКА ---
+    function speakText() {
+        if(isSpeaking) return;
+        const text = document.getElementById('articleContent').innerText;
+        if(!text) return;
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ru-RU'; // Русский язык
+        utterance.rate = 1.0; // Скорость
+        
+        utterance.onend = () => { isSpeaking = false; };
+        
+        window.speechSynthesis.speak(utterance);
+        isSpeaking = true;
+    }
+
+    function stopSpeak() {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
     }
 </script>
 
