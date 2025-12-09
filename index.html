@@ -30,7 +30,6 @@
         .hero { text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 20px; margin-bottom: 30px; }
         .hero h1 { font-size: 28px; margin-bottom: 10px; }
         
-        /* Вкладки */
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #eee; cursor: pointer; font-weight: 600; color: #555; }
         .tab-btn.active { background: var(--accent); color: white; }
@@ -78,16 +77,20 @@
 <div class="container">
     <div class="hero">
         <h1>Умный переводчик</h1>
+        
+        <!-- Вкладки -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
             <button class="tab-btn" onclick="switchMode('text')">📝 Текст</button>
         </div>
 
+        <!-- Поле URL -->
         <div id="urlMode" class="input-area active">
             <input type="text" id="urlInput" placeholder="https://..." />
             <button class="btn-main" onclick="translateUrl()">Перевести сайт</button>
         </div>
 
+        <!-- Поле ТЕКСТ -->
         <div id="textMode" class="input-area">
             <textarea id="textInput" placeholder="Вставьте английский текст сюда..."></textarea>
             <button class="btn-main" onclick="translateText()">Перевести текст</button>
@@ -96,7 +99,7 @@
         <div class="fact-box" id="factBox">...</div>
     </div>
 
-    <!-- Категории и Лента (по умолчанию видны только в режиме URL) -->
+    <!-- Блок новостей (скрывается в режиме Текст) -->
     <div id="newsSection">
         <div class="categories">
             <button class="cat-btn active" onclick="loadCategory('programming', this)">Программирование</button>
@@ -116,7 +119,12 @@
 
 <script>
     const API = 'https://my-translator-zvrl.onrender.com';
-    const facts = ["Первый баг был жуком в реле Mark II.", "Python назван в честь Монти Пайтона.", "Символ @ использовался еще в средние века."];
+    const facts = [
+        "Первый баг был жуком в реле Mark II.", 
+        "Python назван в честь Монти Пайтона.", 
+        "Символ @ использовался еще в средние века.",
+        "Первый сайт в мире был запущен в 1991 году."
+    ];
 
     window.onload = function() {
         document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
@@ -125,38 +133,31 @@
     };
 
     function resetView() {
-        // Скрываем все результаты
         document.getElementById('result').style.display = 'none';
         document.getElementById('textResult').style.display = 'none';
         document.getElementById('loader').style.display = 'none';
-        
-        // Показываем поиск
         document.querySelector('.hero').style.display = 'block';
     }
 
     function goHome() {
         resetView();
-        // Показываем ленту новостей
         document.getElementById('newsSection').style.display = 'block';
         document.getElementById('newsGrid').style.display = 'grid';
-        switchMode('url'); // Возвращаем на вкладку "Ссылка"
+        switchMode('url');
     }
 
     function switchMode(mode) {
-        resetView(); // Очищаем экран
-        
+        resetView();
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.input-area').forEach(a => a.classList.remove('active'));
         
         if(mode === 'url') {
             document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
             document.getElementById('urlMode').classList.add('active');
-            // В режиме URL показываем новости
             document.getElementById('newsSection').style.display = 'block';
         } else {
             document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
             document.getElementById('textMode').classList.add('active');
-            // В режиме Текста СКРЫВАЕМ новости
             document.getElementById('newsSection').style.display = 'none';
         }
     }
@@ -199,7 +200,6 @@
         const inputUrl = url || document.getElementById('urlInput').value;
         if(!inputUrl) return alert("Введите ссылку!");
         
-        // Скрываем всё лишнее
         document.getElementById('newsSection').style.display = 'none';
         document.getElementById('result').style.display = 'none';
         document.getElementById('loader').style.display = 'block';
