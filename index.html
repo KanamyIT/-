@@ -3,319 +3,387 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News/Translate by Kanamy</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Kanamy Translate 4.2</title>
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --accent: #FF4500;
+            --primary: #007AFF; /* Синий как в iOS */
+            --bg: #F2F2F7;
+            --card-bg: #FFFFFF;
+            --text: #000000;
         }
-        body.dark-mode {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #e0e0e0;
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+            padding-bottom: 40px;
         }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; transition: 0.3s; }
-        
-        header { background: var(--card-bg); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 22px; font-weight: 800; cursor: pointer; }
-        .logo span { color: var(--accent); }
-        .nav-btn { background: none; border: 2px solid transparent; color: var(--text-main); font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: 20px; font-size: 14px; transition: 0.2s; }
-        .nav-btn:hover { border-color: var(--accent); }
 
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        
-        .hero { text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 20px; margin-bottom: 30px; }
-        .hero h1 { font-size: 28px; margin-bottom: 10px; }
-        
-        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #eee; cursor: pointer; font-weight: 600; color: #555; }
-        .tab-btn.active { background: var(--accent); color: white; }
+        /* Шапка */
+        header {
+            background-color: var(--card-bg);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-        .input-area { display: none; }
-        .input-area.active { display: block; }
+        .logo {
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--primary);
+            text-decoration: none;
+        }
 
-        input, textarea { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; background: var(--bg-color); color: var(--text-main); box-sizing: border-box; font-family: inherit;}
-        textarea { resize: vertical; min-height: 100px; }
-        input:focus, textarea:focus { border-color: var(--accent); outline: none;}
-        
-        .btn-main { background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 15px; }
-        .btn-main:hover { opacity: 0.9; }
+        .logo span { color: #FF9500; } /* Оранжевый акцент */
 
-        /* ИСТОРИЯ */
-        .history-box { text-align: left; margin-top: 20px; display: none; }
-        .history-title { font-size: 12px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 10px; }
-        .history-item { background: rgba(0,0,0,0.03); padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
-        .history-item:hover { background: rgba(0,0,0,0.06); }
-        .history-icon { font-size: 16px; }
+        /* Навигация */
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px;
+            background: #e5e5ea;
+            padding: 4px;
+            border-radius: 12px;
+        }
 
-        /* Категории */
-        .categories { display: flex; gap: 8px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;}
-        .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; background: var(--card-bg); font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px;}
-        .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .nav-btn {
+            flex: 1;
+            border: none;
+            background: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
 
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .news-card { background: var(--card-bg); padding: 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid transparent; }
-        .news-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .tag-badge { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 8px; }
-        .news-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
+        .nav-btn.active {
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-        /* ПАНЕЛЬ УПРАВЛЕНИЯ СТАТЬЕЙ */
-        .article-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .control-btn { background: none; border: 1px solid #ddd; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 5px; }
-        .control-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .read-time { font-size: 13px; color: #888; font-weight: 600; margin-left: auto; }
+        /* Контейнер */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
 
-        .article-view { background: var(--card-bg); padding: 40px; border-radius: 20px; margin-top: 30px; display: none; line-height: 1.7; font-size: 18px; }
-        .article-view img { max-width: 100%; border-radius: 8px; margin: 20px 0; display: block; }
-        .text-result { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-top: 20px; display: none; border-left: 4px solid var(--accent); white-space: pre-wrap; font-size: 18px;}
+        /* Поле ввода */
+        .input-group {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            text-align: center;
+        }
 
-        .loader { display: none; margin: 20px auto; width: 30px; height: 30px; border: 3px solid #ccc; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        input[type="text"] {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #e5e5ea;
+            border-radius: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
 
-        .fact-box { font-size: 12px; color: #888; margin-top: 20px; font-style: italic; }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            font-size: 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.1s;
+        }
+
+        .btn-main:active { transform: scale(0.98); }
+
+        /* --- ВАЖНО: ИСПРАВЛЕНИЕ ВЕРСТКИ СТАТЕЙ --- */
+        #result {
+            margin-top: 20px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            line-height: 1.6;
+            font-size: 17px;
+            overflow-wrap: break-word; /* Чтобы длинные слова переносились */
+            word-wrap: break-word;
+        }
+
+        /* Глобальный сброс стилей внутри статьи для мобильных */
+        #result img, #result video, #result iframe {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+            margin: 15px auto;
+            border-radius: 8px;
+        }
+
+        #result h1, #result h2, #result h3 {
+            margin-top: 1.5em;
+            color: #1a1a1a;
+        }
+
+        #result a { color: var(--primary); text-decoration: none; }
+
+        /* Магия для маленьких экранов */
+        @media (max-width: 768px) {
+            #result * {
+                float: none !important; /* Убираем обтекание */
+                width: auto !important; /* Сбрасываем жесткую ширину */
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                position: static !important;
+            }
+            
+            #result table {
+                display: block;
+                overflow-x: auto;
+                width: 100%;
+            }
+        }
+        /* ----------------------------------------- */
+
+        /* Карточки новостей */
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .news-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .news-card:hover { transform: translateY(-3px); }
+
+        .news-img {
+            height: 160px;
+            background: #eee;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .news-content { padding: 15px; }
+        .news-title { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+        .news-desc { font-size: 14px; color: #666; line-height: 1.4; }
+
+        /* Лоадер */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e5ea;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Вкладки */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo" onclick="goHome()">News/Translate <span>by Kanamy</span></div>
-    <button class="nav-btn" onclick="document.body.classList.toggle('dark-mode')">🌙 Тема</button>
+    <a href="#" class="logo" onclick="switchTab('translate')">Kanamy<span>AI</span></a>
+    <div style="font-size: 12px; color: #888;">v 4.2</div>
 </header>
 
+<div class="nav-buttons container">
+    <button class="nav-btn active" onclick="switchTab('translate')" id="btn-trans">Перевод</button>
+    <button class="nav-btn" onclick="switchTab('feed')" id="btn-feed">Лента</button>
+    <button class="nav-btn" onclick="switchTab('about')" id="btn-about">О нас</button>
+</div>
+
 <div class="container">
-    <div class="hero">
-        <h1>Умный переводчик</h1>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
-            <button class="tab-btn" onclick="switchMode('text')">📝 Текст</button>
+
+    <!-- ВКЛАДКА: ПЕРЕВОД -->
+    <div id="translate-tab" class="tab-content active">
+        <div class="input-group">
+            <h2>Читайте интернет без границ</h2>
+            <p style="color: #666; margin-bottom: 20px;">Вставьте ссылку на любую статью</p>
+            <input type="text" id="urlInput" placeholder="https://example.com/article...">
+            <button class="btn-main" onclick="startTranslate()">🚀 Перевести</button>
         </div>
 
-        <div id="urlMode" class="input-area active">
-            <input type="text" id="urlInput" placeholder="https://..." />
-            <button class="btn-main" onclick="translateUrl()">Перевести сайт</button>
-            
-            <!-- Блок Истории -->
-            <div id="historyBox" class="history-box">
-                <div class="history-title">Недавно смотрели:</div>
-                <div id="historyList"></div>
-            </div>
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p id="loader-text">Нейросеть читает статью...</p>
         </div>
 
-        <div id="textMode" class="input-area">
-            <textarea id="textInput" placeholder="Вставьте английский текст сюда..."></textarea>
-            <button class="btn-main" onclick="translateText()">Перевести текст</button>
+        <div id="result">
+            <!-- Сюда прилетит статья -->
         </div>
-        
-        <div class="fact-box" id="factBox">...</div>
     </div>
 
-    <div id="newsSection">
-        <div class="categories">
-            <button class="cat-btn active" onclick="loadCategory('programming', this)">Программирование</button>
-            <button class="cat-btn" onclick="loadCategory('history', this)">История</button>
-            <button class="cat-btn" onclick="loadCategory('gaming', this)">Игры</button>
-            <button class="cat-btn" onclick="loadCategory('movies', this)">Кино</button>
+    <!-- ВКЛАДКА: ЛЕНТА -->
+    <div id="feed-tab" class="tab-content">
+        <h2 style="margin-bottom: 20px;">Актуальное из IT и Игр</h2>
+        <div id="feed-grid" class="feed-grid">
+            <!-- Сюда прилетят новости -->
+            <p style="text-align: center; color: #999;">Загрузка ленты...</p>
         </div>
-        <div class="news-grid" id="newsGrid"></div>
     </div>
 
-    <div class="loader" id="loader"></div>
-    
-    <!-- Результат СТАТЬИ -->
-    <div id="result" class="article-view">
-        <div class="article-controls">
-            <button class="control-btn" onclick="speakText()">🔊 Слушать</button>
-            <button class="control-btn" onclick="stopSpeak()">⏹ Стоп</button>
-            <span class="read-time" id="readTime">⏱ 5 мин</span>
+    <!-- ВКЛАДКА: О НАС -->
+    <div id="about-tab" class="tab-content">
+        <div class="input-group" style="text-align: left;">
+            <h2>О проекте Kanamy</h2>
+            <p>Мы используем современные алгоритмы парсинга и нейросетевого перевода, чтобы делать иностранный контент доступным.</p>
+            <p><strong>Версия:</strong> 4.2 (Mobile Fix Edition)</p>
+            <p><strong>Разработчик:</strong> Студент-энтузиаст</p>
         </div>
-        <div id="articleContent"></div>
     </div>
 
-    <!-- Результат ТЕКСТА -->
-    <div id="textResult" class="text-result"></div>
 </div>
 
 <script>
-    const API = 'https://my-translator-zvrl.onrender.com';
-    const facts = ["Первый баг был жуком в реле Mark II.", "Python назван в честь Монти Пайтона.", "Символ @ использовался еще в средние века."];
-    let isSpeaking = false;
+    // URL твоего сервера на Render (проверь, чтобы совпадал)
+    const API_URL = "https://my-translator-zvrl.onrender.com"; 
 
-    window.onload = function() {
-        document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
-        loadCategory('programming', document.querySelector('.cat-btn.active'));
-        renderHistory();
-        fetch(API + '/').catch(console.error);
-    };
+    // Переключение вкладок
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
-    function resetView() {
-        document.getElementById('result').style.display = 'none';
-        document.getElementById('textResult').style.display = 'none';
-        document.getElementById('loader').style.display = 'none';
-        document.querySelector('.hero').style.display = 'block';
-        stopSpeak(); // Остановить звук при уходе
-    }
-
-    function goHome() {
-        resetView();
-        document.getElementById('newsSection').style.display = 'block';
-        document.getElementById('newsGrid').style.display = 'grid';
-        switchMode('url');
-    }
-
-    function switchMode(mode) {
-        resetView();
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.input-area').forEach(a => a.classList.remove('active'));
-        
-        if(mode === 'url') {
-            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
-            document.getElementById('urlMode').classList.add('active');
-            document.getElementById('newsSection').style.display = 'block';
+        if(tabName === 'translate') {
+            document.getElementById('translate-tab').classList.add('active');
+            document.getElementById('btn-trans').classList.add('active');
+        } else if(tabName === 'feed') {
+            document.getElementById('feed-tab').classList.add('active');
+            document.getElementById('btn-feed').classList.add('active');
+            loadFeed(); // Грузим новости при открытии
         } else {
-            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
-            document.getElementById('textMode').classList.add('active');
-            document.getElementById('newsSection').style.display = 'none';
+            document.getElementById('about-tab').classList.add('active');
+            document.getElementById('btn-about').classList.add('active');
         }
     }
 
-    // --- ИСТОРИЯ ---
-    function saveToHistory(url) {
-        let history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
-        // Убираем дубликат, если есть, и добавляем в начало
-        history = history.filter(item => item !== url);
-        history.unshift(url);
-        if(history.length > 3) history.pop(); // Храним только 3 последних
-        localStorage.setItem('kanamyHistory', JSON.stringify(history));
-        renderHistory();
-    }
+    // Функция перевода
+    async function startTranslate() {
+        const url = document.getElementById('urlInput').value;
+        const loader = document.getElementById('loader');
+        const resultDiv = document.getElementById('result');
 
-    function renderHistory() {
-        const list = document.getElementById('historyList');
-        const box = document.getElementById('historyBox');
-        const history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
-        
-        if(history.length === 0) {
-            box.style.display = 'none';
+        if (!url) {
+            alert("Пожалуйста, вставьте ссылку!");
             return;
         }
-        
-        box.style.display = 'block';
-        list.innerHTML = "";
-        history.forEach(url => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            // Обрезаем длинную ссылку
-            const shortUrl = url.length > 40 ? url.substring(0, 40) + '...' : url;
-            item.innerHTML = `<span class="history-icon">🕒</span> ${shortUrl}`;
-            item.onclick = () => translateUrl(url);
-            list.appendChild(item);
-        });
-    }
 
-    async function loadCategory(cat, btn) {
-        resetView();
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        if(btn) btn.classList.add('active');
-        
-        const grid = document.getElementById('newsGrid');
-        grid.innerHTML = "";
-        document.getElementById('loader').style.display = 'block';
+        resultDiv.innerHTML = "";
+        resultDiv.style.display = "none";
+        loader.style.display = "block";
+        document.getElementById('loader-text').innerText = "Подключаемся к серверу...";
 
         try {
-            const res = await fetch(`${API}/feed?category=${cat}`);
-            const data = await res.json();
-            document.getElementById('loader').style.display = 'none';
-            
-            if(!data.articles || data.articles.length === 0) {
-                 grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Новостей нет :(</p>";
-                 return;
-            }
-
-            data.articles.forEach(art => {
-                const card = document.createElement('div');
-                card.className = 'news-card';
-                card.innerHTML = `
-                    <div><span class="tag-badge">${art.tag}</span><div class="news-title">${art.title}</div></div>
-                    <div style="font-size:12px; color:#aaa">${art.original_title}</div>
-                `;
-                card.onclick = () => translateUrl(art.link);
-                grid.appendChild(card);
-            });
-        } catch(e) { document.getElementById('loader').style.display = 'none'; }
-    }
-
-    async function translateUrl(url = null) {
-        const inputUrl = url || document.getElementById('urlInput').value;
-        if(!inputUrl) return alert("Введите ссылку!");
-        
-        saveToHistory(inputUrl); // Сохраняем в историю
-        
-        document.getElementById('newsSection').style.display = 'none';
-        document.getElementById('result').style.display = 'none';
-        document.getElementById('loader').style.display = 'block';
-
-        try {
-            const res = await fetch(API + '/translate', {
+            const response = await fetch(`${API_URL}/translate`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url: inputUrl})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
             });
-            const data = await res.json();
-            
-            document.getElementById('articleContent').innerHTML = data.translated_html;
-            document.getElementById('readTime').innerText = `⏱ ${data.read_time} мин`;
-            
-            document.getElementById('result').style.display = 'block';
-        } catch(e) {
-            alert("Ошибка перевода.");
-            goHome();
+
+            const data = await response.json();
+
+            if (data.error) {
+                resultDiv.innerHTML = `<p style="color: red; text-align: center;">Ошибка: ${data.error}</p>`;
+            } else {
+                resultDiv.innerHTML = data.translated_html; // Вставляем HTML
+                
+                // Дополнительная чистка (на всякий случай)
+                cleanUpStyles();
+            }
+            resultDiv.style.display = "block";
+
+        } catch (error) {
+            resultDiv.innerHTML = `<p style="color: red; text-align: center;">Сервер не отвечает (спит?). Попробуйте еще раз через 10 секунд.</p>`;
         } finally {
-            document.getElementById('loader').style.display = 'none';
+            loader.style.display = "none";
         }
     }
 
-    async function translateText() {
-        const text = document.getElementById('textInput').value;
-        if(!text) return alert("Введите текст!");
-        
-        document.getElementById('textResult').style.display = 'none';
-        document.getElementById('loader').style.display = 'block';
-
+    // Загрузка ленты новостей
+    async function loadFeed() {
+        const grid = document.getElementById('feed-grid');
         try {
-            const res = await fetch(API + '/translate_text', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: text})
-            });
+            const res = await fetch(`${API_URL}/feed`);
             const data = await res.json();
-            document.getElementById('textResult').innerText = data.result;
-            document.getElementById('textResult').style.display = 'block';
-        } catch(e) { alert("Ошибка."); } 
-        finally { document.getElementById('loader').style.display = 'none'; }
+            
+            grid.innerHTML = ""; // Очищаем
+            
+            data.feed.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'news-card';
+                card.onclick = () => {
+                    // При клике на новость перекидываем в переводчик
+                    switchTab('translate');
+                    document.getElementById('urlInput').value = item.link;
+                    startTranslate();
+                };
+
+                // Если картинки нет, ставим заглушку
+                const imgUrl = item.image ? item.image : 'https://via.placeholder.com/300x160?text=News';
+                
+                card.innerHTML = `
+                    <div class="news-img" style="background-image: url('${imgUrl}')"></div>
+                    <div class="news-content">
+                        <div class="news-title">${item.title}</div>
+                        <div class="news-desc">${item.summary || "Нажмите, чтобы прочитать перевод..."}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+        } catch (e) {
+            grid.innerHTML = "<p style='text-align:center; color: #999;'>Не удалось загрузить новости.</p>";
+        }
     }
 
-    // --- ОЗВУЧКА ---
-    function speakText() {
-        if(isSpeaking) return;
-        const text = document.getElementById('articleContent').innerText;
-        if(!text) return;
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ru-RU'; // Русский язык
-        utterance.rate = 1.0; // Скорость
-        
-        utterance.onend = () => { isSpeaking = false; };
-        
-        window.speechSynthesis.speak(utterance);
-        isSpeaking = true;
-    }
-
-    function stopSpeak() {
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
+    // Дополнительная страховка: удаляем ширину скриптом, если CSS не справился
+    function cleanUpStyles() {
+        const result = document.getElementById('result');
+        const elements = result.querySelectorAll('*');
+        elements.forEach(el => {
+            el.style.width = ''; // Сбрасываем жесткую ширину
+            el.style.maxWidth = ''; 
+            if(el.tagName === 'IMG') {
+                el.removeAttribute('width');
+                el.removeAttribute('height');
+            }
+        });
     }
 </script>
 
