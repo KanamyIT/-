@@ -4,156 +4,470 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News/Translate by Kanamy</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --accent: #FF4500;
+            --bg: #0a0a0a;
+            --surface: #1a1a1a;
+            --orange: #FF6B35;
+            --orange-dim: rgba(255, 107, 53, 0.1);
+            --text: #e8e8e8;
+            --text-dim: #888;
+            --border: #2a2a2a;
         }
-        body.dark-mode {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #e0e0e0;
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6;
+            overflow-x: hidden;
         }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; transition: 0.3s; }
-        
-        header { background: var(--card-bg); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 22px; font-weight: 800; cursor: pointer; }
-        .logo span { color: var(--accent); }
-        .nav-btn { background: none; border: 2px solid transparent; color: var(--text-main); font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: 20px; font-size: 14px; transition: 0.2s; }
-        .nav-btn:hover { border-color: var(--accent); }
 
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        
-        .hero { text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 20px; margin-bottom: 30px; }
-        .hero h1 { font-size: 28px; margin-bottom: 10px; }
-        
-        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #eee; cursor: pointer; font-weight: 600; color: #555; }
-        .tab-btn.active { background: var(--accent); color: white; }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--orange-dim) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            50% { transform: translate(10%, 10%) scale(1.1); opacity: 0.5; }
+        }
 
-        .input-area { display: none; }
+        header { 
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { 
+            font-size: 20px; 
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+        .logo span { color: var(--orange); font-weight: 600; }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--orange);
+            transform: scale(0);
+            transition: transform 0.3s;
+            border-radius: 50%;
+            z-index: -1;
+        }
+        .theme-toggle:hover::before { transform: scale(1); }
+        .theme-toggle:hover { border-color: var(--orange); transform: rotate(15deg); }
+
+        .container { 
+            max-width: 1100px; 
+            margin: 0 auto; 
+            padding: 60px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero { text-align: center; margin-bottom: 80px; }
+        
+        .hero h1 { 
+            font-size: 48px; 
+            font-weight: 300;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--text) 0%, var(--orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tabs { 
+            display: inline-flex;
+            gap: 4px;
+            background: var(--surface);
+            padding: 4px;
+            border-radius: 50px;
+            margin-bottom: 40px;
+            border: 1px solid var(--border);
+        }
+        
+        .tab-btn { 
+            padding: 10px 28px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        .tab-btn.active { 
+            background: var(--orange);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .input-area { display: none; max-width: 600px; margin: 0 auto; }
         .input-area.active { display: block; }
 
-        input, textarea { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; background: var(--bg-color); color: var(--text-main); box-sizing: border-box; font-family: inherit;}
-        textarea { resize: vertical; min-height: 100px; }
-        input:focus, textarea:focus { border-color: var(--accent); outline: none;}
+        input, textarea { 
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        input:focus, textarea:focus { 
+            border-color: var(--orange);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--orange-dim);
+        }
+        textarea { resize: vertical; min-height: 120px; }
+
+        .btn-main { 
+            margin-top: 16px;
+            padding: 14px 32px;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-main::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .btn-main:hover::before { width: 300px; height: 300px; }
+        .btn-main:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .history-box { margin-top: 30px; display: none; }
+        .history-title { 
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .history-item { 
+            background: var(--surface);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .history-item:hover { 
+            border-color: var(--orange);
+            transform: translateX(4px);
+        }
+
+        .categories { 
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
         
-        .btn-main { background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 15px; }
-        .btn-main:hover { opacity: 0.9; }
+        .cat-btn { 
+            padding: 10px 24px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px;
+            font-size: 14px;
+            position: relative;
+        }
+        .cat-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--orange);
+            transition: all 0.3s;
+            transform: translateX(-50%);
+        }
+        .cat-btn:hover::after { width: 80%; }
+        .cat-btn.active { 
+            background: var(--orange);
+            color: #fff;
+            border-color: var(--orange);
+        }
 
-        /* ИСТОРИЯ */
-        .history-box { text-align: left; margin-top: 20px; display: none; }
-        .history-title { font-size: 12px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 10px; }
-        .history-item { background: rgba(0,0,0,0.03); padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-main); word-break: break-all; }
-        .history-item:hover { background: rgba(0,0,0,0.06); }
-        .history-icon { font-size: 16px; flex-shrink: 0; }
+        .news-grid { 
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        
+        .news-card { 
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        .news-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--orange);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        .news-card:hover::before { transform: scaleX(1); }
+        .news-card:hover { 
+            transform: translateY(-4px);
+            border-color: var(--orange);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+        
+        .tag-badge { 
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        
+        .news-title { 
+            font-size: 17px;
+            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
 
-        /* Категории */
-        .categories { display: flex; gap: 8px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;}
-        .cat-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; background: var(--card-bg); font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px;}
-        .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .news-card { background: var(--card-bg); padding: 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid transparent; }
-        .news-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .tag-badge { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 8px; }
-        .news-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
-
-        /* ПАНЕЛЬ УПРАВЛЕНИЯ СТАТЬЕЙ */
-        .article-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; flex-wrap: wrap; }
-        .control-btn { background: none; border: 1px solid #ddd; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-        .control-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .read-time { font-size: 13px; color: #888; font-weight: 600; margin-left: auto; white-space: nowrap; }
+        .article-controls { 
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-btn { 
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .control-btn:hover { 
+            border-color: var(--orange);
+            background: var(--orange-dim);
+        }
+        
+        .read-time { 
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-left: auto;
+        }
 
         .article-view { 
-            background: var(--card-bg); 
-            padding: 40px; 
-            border-radius: 20px; 
-            margin-top: 30px; 
-            display: none; 
-            line-height: 1.7; 
-            font-size: 18px;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-            word-break: break-word;
-            max-width: 100%;
-        }
-        .article-view * {
-            max-width: 100%;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
+            background: var(--surface);
+            padding: 50px;
+            border-radius: 16px;
+            margin-top: 40px;
+            display: none;
+            line-height: 1.8;
+            font-size: 17px;
+            border: 1px solid var(--border);
         }
         .article-view img { 
-            max-width: 100%; 
-            height: auto;
-            border-radius: 8px; 
-            margin: 20px 0; 
-            display: block; 
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 30px 0;
         }
+        
         .text-result { 
-            background: var(--card-bg); 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-top: 20px; 
-            display: none; 
-            border-left: 4px solid var(--accent); 
-            white-space: pre-wrap; 
-            font-size: 18px;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-            word-break: break-word;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: none;
+            border-left: 3px solid var(--orange);
+            font-size: 17px;
+            line-height: 1.8;
         }
 
-        .loader { display: none; margin: 20px auto; width: 30px; height: 30px; border: 3px solid #ccc; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loader { 
+            display: none;
+            margin: 40px auto;
+            width: 40px;
+            height: 40px;
+            position: relative;
+        }
+        .loader::before, .loader::after {
+            content: '';
+            position: absolute;
+            border: 2px solid var(--orange);
+            border-radius: 50%;
+            animation: ripple 1.5s infinite;
+        }
+        .loader::before { width: 40px; height: 40px; }
+        .loader::after { width: 40px; height: 40px; animation-delay: 0.75s; }
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
 
-        .fact-box { font-size: 12px; color: #888; margin-top: 20px; font-style: italic; }
+        .fact-box { 
+            margin-top: 30px;
+            padding: 16px 24px;
+            background: var(--orange-dim);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-dim);
+            border-left: 3px solid var(--orange);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-        /* Адаптивность */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange) 0%, #ff8c61 100%);
+            z-index: 1000;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
         @media (max-width: 768px) {
-            .article-view { padding: 20px; font-size: 16px; }
-            .hero h1 { font-size: 24px; }
-            .container { padding: 0 10px; }
-            header { padding: 15px 3%; }
-            .logo { font-size: 18px; }
+            .hero h1 { font-size: 32px; }
+            .article-view { padding: 24px; font-size: 16px; }
+            .container { padding: 40px 16px; }
+            .news-grid { grid-template-columns: 1fr; }
         }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--border);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
     </style>
 </head>
 <body>
 
+<div class="reading-progress" id="readingProgress"></div>
+
 <header>
     <div class="logo" onclick="goHome()">News/Translate <span>by Kanamy</span></div>
-    <button class="nav-btn" onclick="document.body.classList.toggle('dark-mode')">🌙 Тема</button>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 </header>
 
 <div class="container">
     <div class="hero">
         <h1>Умный переводчик</h1>
+        
         <div class="tabs">
             <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
             <button class="tab-btn" onclick="switchMode('text')">📝 Текст</button>
         </div>
 
         <div id="urlMode" class="input-area active">
-            <input type="text" id="urlInput" placeholder="https://..." />
-            <button class="btn-main" onclick="translateUrl()">Перевести сайт</button>
+            <input type="text" id="urlInput" placeholder="Вставьте ссылку на статью..." />
+            <button class="btn-main" onclick="translateUrl()">Перевести</button>
             
-            <!-- Блок Истории -->
             <div id="historyBox" class="history-box">
-                <div class="history-title">Недавно смотрели:</div>
+                <div class="history-title">Недавно просмотрено</div>
                 <div id="historyList"></div>
             </div>
         </div>
 
         <div id="textMode" class="input-area">
-            <textarea id="textInput" placeholder="Вставьте английский текст сюда..."></textarea>
-            <button class="btn-main" onclick="translateText()">Перевести текст</button>
+            <textarea id="textInput" placeholder="Вставьте текст для перевода..."></textarea>
+            <button class="btn-main" onclick="translateText()">Перевести</button>
         </div>
         
-        <div class="fact-box" id="factBox">...</div>
+        <div class="fact-box" id="factBox">💡 Загрузка...</div>
     </div>
 
     <div id="newsSection">
@@ -168,30 +482,40 @@
 
     <div class="loader" id="loader"></div>
     
-    <!-- Результат СТАТЬИ -->
     <div id="result" class="article-view">
         <div class="article-controls">
             <button class="control-btn" onclick="speakText()">🔊 Слушать</button>
             <button class="control-btn" onclick="stopSpeak()">⏹ Стоп</button>
+            <button class="control-btn" onclick="copyArticle()">📋 Копировать</button>
             <span class="read-time" id="readTime">⏱ 5 мин</span>
         </div>
         <div id="articleContent"></div>
     </div>
 
-    <!-- Результат ТЕКСТА -->
     <div id="textResult" class="text-result"></div>
 </div>
 
 <script>
-    const API = 'https://my-translator-zvrl.onrender.com';
-    const facts = ["Первый баг был жуком в реле Mark II.", "Python назван в честь Монти Пайтона.", "Символ @ использовался еще в средние века."];
+    const API = 'http://localhost:8000'; // Замените на ваш URL
+    const facts = [
+        "Первый компьютерный баг был настоящим жуком",
+        "Python назван в честь Монти Пайтон",
+        "Символ @ использовался в средние века",
+        "Первый веб-сайт появился в 1991 году"
+    ];
     let isSpeaking = false;
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        document.getElementById('readingProgress').style.width = scrolled + '%';
+    });
 
     window.onload = function() {
         document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
         loadCategory('programming', document.querySelector('.cat-btn.active'));
         renderHistory();
-        fetch(API + '/').catch(console.error);
     };
 
     function resetView() {
@@ -207,6 +531,7 @@
         document.getElementById('newsSection').style.display = 'block';
         document.getElementById('newsGrid').style.display = 'grid';
         switchMode('url');
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function switchMode(mode) {
@@ -225,7 +550,12 @@
         }
     }
 
-    // --- ИСТОРИЯ ---
+    function toggleTheme() {
+        const btn = document.querySelector('.theme-toggle');
+        btn.style.transform = 'rotate(360deg)';
+        setTimeout(() => btn.style.transform = 'rotate(0deg)', 300);
+    }
+
     function saveToHistory(url) {
         let history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
         history = history.filter(item => item !== url);
@@ -250,8 +580,8 @@
         history.forEach(url => {
             const item = document.createElement('div');
             item.className = 'history-item';
-            const shortUrl = url.length > 40 ? url.substring(0, 40) + '...' : url;
-            item.innerHTML = `<span class="history-icon">🕒</span> ${shortUrl}`;
+            const shortUrl = url.length > 50 ? url.substring(0, 50) + '...' : url;
+            item.innerHTML = `<span style="opacity:0.5">🕒</span>${shortUrl}`;
             item.onclick = () => translateUrl(url);
             list.appendChild(item);
         });
@@ -272,21 +602,24 @@
             document.getElementById('loader').style.display = 'none';
             
             if(!data.articles || data.articles.length === 0) {
-                 grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Новостей нет :(</p>";
-                 return;
+                grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: var(--text-dim);'>Новостей пока нет</p>";
+                return;
             }
 
             data.articles.forEach(art => {
                 const card = document.createElement('div');
                 card.className = 'news-card';
                 card.innerHTML = `
-                    <div><span class="tag-badge">${art.tag}</span><div class="news-title">${art.title}</div></div>
-                    <div style="font-size:12px; color:#aaa">${art.original_title}</div>
+                    <div class="tag-badge">${art.tag}</div>
+                    <div class="news-title">${art.title}</div>
+                    <div style="font-size:12px; color: var(--text-dim); margin-top: 8px;">${art.original_title}</div>
                 `;
                 card.onclick = () => translateUrl(art.link);
                 grid.appendChild(card);
             });
-        } catch(e) { document.getElementById('loader').style.display = 'none'; }
+        } catch(e) { 
+            document.getElementById('loader').style.display = 'none';
+        }
     }
 
     async function translateUrl(url = null) {
@@ -298,6 +631,7 @@
         document.getElementById('newsSection').style.display = 'none';
         document.getElementById('result').style.display = 'none';
         document.getElementById('loader').style.display = 'block';
+        window.scrollTo({top: 0, behavior: 'smooth'});
 
         try {
             const res = await fetch(API + '/translate', {
@@ -308,11 +642,10 @@
             const data = await res.json();
             
             document.getElementById('articleContent').innerHTML = data.translated_html;
-            document.getElementById('readTime').innerText = `⏱ ${data.read_time} мин`;
-            
+            document.getElementById('readTime').innerHTML = `⏱ ${data.read_time} мин`;
             document.getElementById('result').style.display = 'block';
         } catch(e) {
-            alert("Ошибка перевода.");
+            alert("Ошибка перевода");
             goHome();
         } finally {
             document.getElementById('loader').style.display = 'none';
@@ -335,29 +668,53 @@
             const data = await res.json();
             document.getElementById('textResult').innerText = data.result;
             document.getElementById('textResult').style.display = 'block';
-        } catch(e) { alert("Ошибка."); } 
+        } catch(e) { alert("Ошибка"); } 
         finally { document.getElementById('loader').style.display = 'none'; }
     }
 
-    // --- ОЗВУЧКА ---
-    function speakText() {
+    async function speakText() {
         if(isSpeaking) return;
         const text = document.getElementById('articleContent').innerText;
         if(!text) return;
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ru-RU';
-        utterance.rate = 1.0;
-        
-        utterance.onend = () => { isSpeaking = false; };
-        
-        window.speechSynthesis.speak(utterance);
-        isSpeaking = true;
+        try {
+            // Используем API для TTS
+            const res = await fetch(API + '/text_to_speech', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: text.substring(0, 5000), voice: 'ru', speed: 1.0})
+            });
+            
+            const audioBlob = await res.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play();
+            isSpeaking = true;
+            audio.onended = () => { isSpeaking = false; };
+        } catch(e) {
+            // Fallback на Web Speech API
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ru-RU';
+            utterance.rate = 1.0;
+            utterance.onend = () => { isSpeaking = false; };
+            window.speechSynthesis.speak(utterance);
+            isSpeaking = true;
+        }
     }
 
     function stopSpeak() {
         window.speechSynthesis.cancel();
         isSpeaking = false;
+    }
+
+    function copyArticle() {
+        const text = document.getElementById('articleContent').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = event.target;
+            const original = btn.innerHTML;
+            btn.innerHTML = '✓ Скопировано';
+            setTimeout(() => btn.innerHTML = original, 2000);
+        });
     }
 </script>
 
