@@ -18,6 +18,8 @@
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        html { scroll-behavior: smooth; }
+        
         body { 
             font-family: 'Inter', -apple-system, sans-serif; 
             background: var(--bg); 
@@ -26,6 +28,7 @@
             overflow-x: hidden;
         }
 
+        /* ЭФФЕКТ: Анимированный градиент */
         body::before {
             content: '';
             position: fixed;
@@ -38,9 +41,76 @@
             pointer-events: none;
             z-index: 0;
         }
+        
+        /* ЭФФЕКТ: Grain/Noise */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            z-index: 1;
+            pointer-events: none;
+            animation: grain 8s steps(10) infinite;
+        }
+        
         @keyframes pulse {
             0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
             50% { transform: translate(10%, 10%) scale(1.1); opacity: 0.5; }
+        }
+        
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-5%, -10%); }
+            30% { transform: translate(3%, -15%); }
+            50% { transform: translate(12%, 9%); }
+            70% { transform: translate(9%, 4%); }
+            90% { transform: translate(-1%, 7%); }
+        }
+
+        /* ЭФФЕКТ: Canvas для частиц */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ЭФФЕКТ: Cursor trail */
+        .cursor-trail {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--orange);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trailFade 1s ease-out forwards;
+            z-index: 9999;
+        }
+        
+        @keyframes trailFade {
+            to {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        /* ЭФФЕКТ: Blob морфинг */
+        .blob {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            top: 5%;
+            right: -150px;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.6;
         }
 
         header { 
@@ -102,7 +172,29 @@
             z-index: 1;
         }
 
-        .hero { text-align: center; margin-bottom: 80px; }
+        .hero { 
+            text-align: center; 
+            margin-bottom: 80px;
+            position: relative;
+        }
+        
+        /* ЭФФЕКТ: Геометрические фигуры */
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 107, 53, 0.1);
+            border-radius: 50%;
+            top: -100px;
+            right: -100px;
+            animation: rotate 30s linear infinite;
+            z-index: -1;
+        }
+        
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
         
         .hero h1 { 
             font-size: 48px; 
@@ -113,6 +205,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            min-height: 60px;
         }
 
         .tabs { 
@@ -287,7 +380,28 @@
             transform: scaleX(0);
             transition: transform 0.3s;
         }
+        
+        /* ЭФФЕКТ: Glow на карточках */
+        .news-card::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, transparent, var(--orange), transparent);
+            background-size: 200% 200%;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+            animation: cardGlow 3s linear infinite;
+        }
+        
+        @keyframes cardGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
         .news-card:hover::before { transform: scaleX(1); }
+        .news-card:hover::after { opacity: 0.2; }
         .news-card:hover { 
             transform: translateY(-4px);
             border-color: var(--orange);
@@ -423,6 +537,7 @@
             .article-view { padding: 24px; font-size: 16px; }
             .container { padding: 40px 16px; }
             .news-grid { grid-template-columns: 1fr; }
+            .blob { display: none; }
         }
 
         ::-webkit-scrollbar { width: 8px; }
@@ -436,7 +551,22 @@
 </head>
 <body>
 
+<!-- ЭФФЕКТ: Прогресс бар -->
 <div class="reading-progress" id="readingProgress"></div>
+
+<!-- ЭФФЕКТ: Canvas для частиц -->
+<canvas id="particles"></canvas>
+
+<!-- ЭФФЕКТ: Blob морфинг -->
+<svg class="blob" viewBox="0 0 200 200">
+    <path fill="#FF6B35" fill-opacity="0.15">
+        <animate attributeName="d" dur="10s" repeatCount="indefinite"
+            values="
+                M45,-50C60,-40,75,-25,80,-5C85,15,80,35,65,45C50,55,30,60,10,55C-10,50,-30,35,-40,15C-50,-5,-45,-25,-30,-40C-15,-55,0,-60,20,-55C35,-50,45,-50,45,-50;
+                M50,-55C65,-45,75,-30,78,-10C80,10,72,30,58,42C44,54,25,58,5,56C-15,54,-35,45,-48,28C-60,10,-65,-10,-58,-28C-50,-45,-35,-55,-15,-58C5,-60,25,-58,40,-52C50,-55,50,-55,50,-55;
+                M45,-50C60,-40,75,-25,80,-5C85,15,80,35,65,45C50,55,30,60,10,55C-10,50,-30,35,-40,15C-50,-5,-45,-25,-30,-40C-15,-55,0,-60,20,-55C35,-50,45,-50,45,-50"/>
+    </path>
+</svg>
 
 <header>
     <div class="logo" onclick="goHome()">News/Translate <span>by Kanamy</span></div>
@@ -445,7 +575,7 @@
 
 <div class="container">
     <div class="hero">
-        <h1>Умный переводчик</h1>
+        <h1 id="mainTitle"></h1>
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
@@ -484,9 +614,9 @@
     
     <div id="result" class="article-view">
         <div class="article-controls">
-            <button class="control-btn" onclick="speakText()">🔊 Слушать</button>
-            <button class="control-btn" onclick="stopSpeak()">⏹ Стоп</button>
-            <button class="control-btn" onclick="copyArticle()">📋 Копировать</button>
+            <button class="control-btn" onclick="speakText()" title="Озвучить статью">🔊 Слушать</button>
+            <button class="control-btn" onclick="stopSpeak()" title="Остановить">⏹ Стоп</button>
+            <button class="control-btn" onclick="copyArticle()" title="Копировать текст">📋 Копировать</button>
             <span class="read-time" id="readTime">⏱ 5 мин</span>
         </div>
         <div id="articleContent"></div>
@@ -498,13 +628,15 @@
 <script>
     const API = 'http://localhost:8000'; // Замените на ваш URL
     const facts = [
-        "Первый компьютерный баг был настоящим жуком",
-        "Python назван в честь Монти Пайтон",
-        "Символ @ использовался в средние века",
-        "Первый веб-сайт появился в 1991 году"
+        "Первый компьютерный баг был настоящим жуком в реле",
+        "Python назван в честь комедийного шоу Монти Пайтон",
+        "Символ @ использовался торговцами в средние века",
+        "Первый веб-сайт появился 6 августа 1991 года",
+        "В мире существует более 700 языков программирования"
     ];
     let isSpeaking = false;
 
+    // ========== ЭФФЕКТ: Прогресс бар скролла ==========
     window.addEventListener('scroll', () => {
         const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
         const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -512,7 +644,106 @@
         document.getElementById('readingProgress').style.width = scrolled + '%';
     });
 
+    // ========== ЭФФЕКТ: Particles canvas ==========
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particles = [];
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 0.5;
+            this.speedX = Math.random() * 0.5 - 0.25;
+            this.speedY = Math.random() * 0.5 - 0.25;
+            this.color = Math.random() > 0.7 ? '#FF6B35' : '#333';
+        }
+        
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            
+            if(this.x > canvas.width) this.x = 0;
+            if(this.x < 0) this.x = canvas.width;
+            if(this.y > canvas.height) this.y = 0;
+            if(this.y < 0) this.y = canvas.height;
+        }
+        
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        for(let i = 0; i < 80; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        requestAnimationFrame(animateParticles);
+    }
+
+    initParticles();
+    animateParticles();
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    // ========== ЭФФЕКТ: Cursor trail ==========
+    let lastTrailTime = 0;
+    document.addEventListener('mousemove', (e) => {
+        const now = Date.now();
+        if(now - lastTrailTime < 50) return; // Throttle
+        lastTrailTime = now;
+        
+        const trail = document.createElement('div');
+        trail.className = 'cursor-trail';
+        trail.style.left = e.pageX + 'px';
+        trail.style.top = e.pageY + 'px';
+        document.body.appendChild(trail);
+        
+        setTimeout(() => trail.remove(), 1000);
+    });
+
+    // ========== ЭФФЕКТ: Typing эффект ==========
+    const titleElement = document.getElementById('mainTitle');
+    const titleText = 'Умный переводчик';
+    let titleIndex = 0;
+
+    function typeWriter() {
+        if(titleIndex < titleText.length) {
+            titleElement.textContent += titleText.charAt(titleIndex);
+            titleIndex++;
+            setTimeout(typeWriter, 100);
+        }
+    }
+
+    // ========== ЭФФЕКТ: Parallax для hero ==========
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const hero = document.querySelector('.hero');
+        if(hero) {
+            hero.style.transform = `translateY(${scrolled * 0.3}px)`;
+        }
+    });
+
+    // ========== Основная логика ==========
     window.onload = function() {
+        setTimeout(typeWriter, 300);
         document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
         loadCategory('programming', document.querySelector('.cat-btn.active'));
         renderHistory();
@@ -678,7 +909,6 @@
         if(!text) return;
 
         try {
-            // Используем API для TTS
             const res = await fetch(API + '/text_to_speech', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -692,7 +922,6 @@
             isSpeaking = true;
             audio.onended = () => { isSpeaking = false; };
         } catch(e) {
-            // Fallback на Web Speech API
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'ru-RU';
             utterance.rate = 1.0;
