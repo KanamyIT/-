@@ -207,7 +207,8 @@ console.log('🚀 App started');
 
 // ЗАМЕНИ ЭТОТ URL ПОСЛЕ ДЕПЛОЯ НА RENDER!
 // Например: 'https://news-translator-abc123.onrender.com'
-const API_BASE = 'YOUR_RENDER_URL_HERE';
+const API_BASE = 'https://my-translator-zvt1.onrender.com';
+
 
 // Для тестирования локально раскомментируй:
 // const API_BASE = 'http://localhost:8002';
@@ -215,7 +216,7 @@ const API_BASE = 'YOUR_RENDER_URL_HERE';
 console.log('📍 API:', API_BASE);
 
 window.onload = function() {
-    if (API_BASE === 'YOUR_RENDER_URL_HERE') {
+    if (API_BASE === 'https://my-translator-zvt1.onrender.com') {
         document.getElementById('status').innerHTML = 
             '⚠️ <strong>Настройка требуется!</strong><br>Задеплой сервер на Render и замени URL в коде';
         document.getElementById('status').style.color = '#ff6b35';
@@ -394,3 +395,4 @@ async function translateText() {
 
 </body>
 </html>
+
