@@ -11,6 +11,7 @@ import os
 
 app = FastAPI()
 
+# CORS для работы с GitHub Pages
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -63,7 +64,8 @@ def translate_html_content(soup):
     word_count = 0
     text_nodes = content.find_all(text=True)
     
-    for node in text_nodes[:30]:  # Только первые 30 блоков для скорости
+    # Переводим первые 30 блоков для скорости
+    for node in text_nodes[:30]:
         original = str(node).strip()
         if len(original) < 10 or len(original) > 1000:
             continue
@@ -145,17 +147,18 @@ def fetch_feed_category(category):
     
     return all_articles
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def home():
-    try:
-        paths = ['index.html', 'index-4.html']
-        for path in paths:
-            if os.path.exists(path):
-                with open(path, 'r', encoding='utf-8') as f:
-                    return f.read()
-        return HTMLResponse("<h1>Server running. Open via GitHub Pages</h1>")
-    except:
-        return HTMLResponse("<h1>Server OK</h1>")
+    return JSONResponse({
+        "status": "ok",
+        "message": "News Translator API is running",
+        "endpoints": {
+            "/feed": "GET - Load RSS feed",
+            "/translate": "POST - Translate article",
+            "/translate_text": "POST - Translate text",
+            "/health": "GET - Health check"
+        }
+    })
 
 @app.get("/feed")
 def get_feed(category: str = "programming"):
@@ -211,13 +214,13 @@ def translate_text(request: TextRequest):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "message": "Server is healthy"}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8002))
+    port = int(os.environ.get("PORT", 10000))
     print("\n" + "="*70)
     print("🚀 NEWS TRANSLATOR SERVER")
     print("="*70)
-    print(f"📍 URL: http://localhost:{port}")
+    print(f"📍 Running on port: {port}")
     print("="*70 + "\n")
     uvicorn.run(app, host="0.0.0.0", port=port)
