@@ -140,19 +140,10 @@
             border-radius: 8px; cursor: pointer;
             margin-bottom: 20px; border: none;
         }
-        .config-notice {
-            position: fixed; bottom: 20px; right: 20px;
-            background: #ff6b35; color: white;
-            padding: 15px 20px; border-radius: 8px;
-            font-size: 13px; max-width: 300px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 1000;
-        }
         @media (max-width: 768px) {
             .hero h1 { font-size: 32px; }
             .article-view { padding: 20px; }
             .news-grid { grid-template-columns: 1fr; }
-            .config-notice { display: none; }
         }
     </style>
 </head>
@@ -197,32 +188,15 @@
     <div id="result" class="article-view"></div>
 </div>
 
-<!-- Уведомление о необходимости настройки -->
-<div class="config-notice" id="configNotice">
-    ⚠️ После деплоя замените URL API в коде (строка 171)
-</div>
-
 <script>
 console.log('🚀 App started');
 
-// ЗАМЕНИ ЭТОТ URL ПОСЛЕ ДЕПЛОЯ НА RENDER!
-// Например: 'https://news-translator-abc123.onrender.com'
 const API_BASE = 'https://my-translator-zvt1.onrender.com';
-
-
-// Для тестирования локально раскомментируй:
-// const API_BASE = 'http://localhost:8002';
 
 console.log('📍 API:', API_BASE);
 
 window.onload = function() {
-    if (API_BASE === 'https://my-translator-zvt1.onrender.com') {
-        document.getElementById('status').innerHTML = 
-            '⚠️ <strong>Настройка требуется!</strong><br>Задеплой сервер на Render и замени URL в коде';
-        document.getElementById('status').style.color = '#ff6b35';
-    } else {
-        loadCategory('programming', document.querySelector('.cat-btn.active'));
-    }
+    loadCategory('programming', document.querySelector('.cat-btn.active'));
 };
 
 function goHome() {
@@ -265,7 +239,7 @@ async function loadCategory(cat, btn) {
     try {
         const res = await fetch(`${API_BASE}/feed?category=${cat}`);
         
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        if(!res.ok) throw new Error(`Сервер недоступен (HTTP ${res.status})`);
         
         const data = await res.json();
         console.log('✅ Articles:', data.articles?.length || 0);
@@ -273,7 +247,7 @@ async function loadCategory(cat, btn) {
         status.style.display = 'none';
         
         if(!data.articles || data.articles.length === 0) {
-            status.textContent = 'Нет статей';
+            status.textContent = 'Нет статей в этой категории';
             status.style.display = 'block';
             return;
         }
@@ -293,7 +267,7 @@ async function loadCategory(cat, btn) {
         
     } catch(e) { 
         console.error('❌', e);
-        status.innerHTML = `Ошибка: ${e.message}<br><small>Проверьте настройку API URL</small>`;
+        status.innerHTML = `Ошибка: ${e.message}<br><small>Сервер Render может "спать". Подождите 30-60 секунд и обновите страницу.</small>`;
         status.style.color = '#ff6b6b';
         status.style.display = 'block';
     }
@@ -395,4 +369,3 @@ async function translateText() {
 
 </body>
 </html>
-
