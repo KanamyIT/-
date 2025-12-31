@@ -11,7 +11,6 @@ import os
 
 app = FastAPI()
 
-# CORS для работы с GitHub Pages
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -64,7 +63,6 @@ def translate_html_content(soup):
     word_count = 0
     text_nodes = content.find_all(text=True)
     
-    # Переводим первые 30 блоков для скорости
     for node in text_nodes[:30]:
         original = str(node).strip()
         if len(original) < 10 or len(original) > 1000:
@@ -152,12 +150,20 @@ def home():
     return JSONResponse({
         "status": "ok",
         "message": "News Translator API is running",
+        "version": "1.0",
         "endpoints": {
             "/feed": "GET - Load RSS feed",
             "/translate": "POST - Translate article",
             "/translate_text": "POST - Translate text",
             "/health": "GET - Health check"
         }
+    })
+
+@app.get("/health")
+def health():
+    return JSONResponse({
+        "status": "ok",
+        "message": "Server is healthy"
     })
 
 @app.get("/feed")
@@ -211,10 +217,6 @@ def translate_text(request: TextRequest):
         return JSONResponse({"result": translated})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
-
-@app.get("/health")
-def health():
-    return {"status": "ok", "message": "Server is healthy"}
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
