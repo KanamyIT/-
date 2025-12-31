@@ -233,42 +233,10 @@
             border: none;
         }
 
-        .server-config {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--surface);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 12px;
-            z-index: 1000;
-        }
-        
-        .server-config input {
-            width: 200px;
-            padding: 8px;
-            margin-top: 8px;
-            font-size: 12px;
-        }
-        
-        .server-status {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ff6b6b;
-            margin-left: 8px;
-        }
-        .server-status.online {
-            background: #51cf66;
-        }
-
         @media (max-width: 768px) {
             .hero h1 { font-size: 32px; }
             .article-view { padding: 20px; }
             .news-grid { grid-template-columns: 1fr; }
-            .server-config { display: none; }
         }
     </style>
 </head>
@@ -313,68 +281,24 @@
     <div id="result" class="article-view"></div>
 </div>
 
-<!-- Настройка сервера -->
-<div class="server-config">
-    <div>
-        Сервер <span id="serverStatus" class="server-status"></span>
-    </div>
-    <input 
-        type="text" 
-        id="serverUrl" 
-        value="http://localhost:8000"
-        placeholder="http://localhost:8000"
-        onchange="updateServerUrl()"
-    />
-</div>
-
 <script>
 console.log('🚀 App started');
 
-// НАСТРОЙКА API URL
-let API_BASE = localStorage.getItem('apiBase') || 'http://localhost:8000';
+// КОНФИГУРАЦИЯ API
+// Для локальной разработки: http://localhost:8002
+// Для продакшена: https://твой-сервис.onrender.com
+let API_BASE = 'http://localhost:8002';
 
-// Если открыт с файловой системы или localhost, используем localhost:8000
-if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    API_BASE = 'http://localhost:8000';
+// Автоопределение
+if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    // Если открыто не с localhost - используй продакшн URL
+    // ЗАМЕНИ НА СВОЙ URL после деплоя на Render:
+    API_BASE = 'https://твой-сервис.onrender.com';
 }
 
-console.log('📍 API Base:', API_BASE);
-console.log('📍 Current location:', window.location.origin);
-
-// Обновить URL сервера
-function updateServerUrl() {
-    const input = document.getElementById('serverUrl');
-    API_BASE = input.value.trim();
-    localStorage.setItem('apiBase', API_BASE);
-    console.log('✅ API Base updated:', API_BASE);
-    checkServerStatus();
-    loadCategory('programming', document.querySelector('.cat-btn.active'));
-}
-
-// Проверить доступность сервера
-async function checkServerStatus() {
-    const statusEl = document.getElementById('serverStatus');
-    try {
-        const res = await fetch(`${API_BASE}/feed?category=programming`, {
-            method: 'GET',
-            signal: AbortSignal.timeout(3000)
-        });
-        if (res.ok) {
-            statusEl.classList.add('online');
-            console.log('✅ Server online');
-        } else {
-            statusEl.classList.remove('online');
-            console.warn('⚠️ Server returned', res.status);
-        }
-    } catch(e) {
-        statusEl.classList.remove('online');
-        console.error('❌ Server offline:', e.message);
-    }
-}
+console.log('📍 API:', API_BASE);
 
 window.onload = function() {
-    document.getElementById('serverUrl').value = API_BASE;
-    checkServerStatus();
     loadCategory('programming', document.querySelector('.cat-btn.active'));
 };
 
@@ -402,7 +326,7 @@ function switchMode(mode) {
 }
 
 async function loadCategory(cat, btn) {
-    console.log('\n📰 Loading category:', cat);
+    console.log('📰 Category:', cat);
     
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
@@ -421,15 +345,12 @@ async function loadCategory(cat, btn) {
         
         const res = await fetch(url);
         
-        console.log('📊 Response status:', res.status);
-        
         if(!res.ok) {
-            throw new Error(`Сервер недоступен (HTTP ${res.status}). Проверьте что сервер запущен на ${API_BASE}`);
+            throw new Error(`Сервер недоступен (HTTP ${res.status})`);
         }
         
         const data = await res.json();
-        console.log('✅ Data received:', data);
-        console.log('📦 Articles count:', data.articles?.length || 0);
+        console.log('✅ Articles:', data.articles?.length || 0);
         
         status.style.display = 'none';
         
@@ -439,12 +360,9 @@ async function loadCategory(cat, btn) {
             return;
         }
 
-        // Отрисовываем карточки
         let rendered = 0;
-        data.articles.forEach((art, idx) => {
-            // Проверяем что у статьи есть ссылка
+        data.articles.forEach((art) => {
             if(!art.link || !art.link.startsWith('http')) {
-                console.warn(`⚠️ Invalid link for article ${idx}:`, art);
                 return;
             }
             
@@ -459,23 +377,17 @@ async function loadCategory(cat, btn) {
             rendered++;
         });
         
-        console.log('✅ Rendered', rendered, 'cards\n');
+        console.log('✅ Rendered:', rendered);
         
         if (rendered === 0) {
-            status.textContent = 'Статьи загружены, но не содержат валидных ссылок';
+            status.textContent = 'Не удалось загрузить статьи';
             status.style.display = 'block';
         }
         
     } catch(e) { 
-        console.error('❌ Load error:', e);
-        status.innerHTML = `
-            <div style="color: #ff6b6b;">
-                Ошибка загрузки: ${e.message}<br>
-                <small style="color: var(--text-dim); margin-top: 10px; display: block;">
-                    Убедитесь что сервер запущен: python server-3.py
-                </small>
-            </div>
-        `;
+        console.error('❌ Error:', e);
+        status.textContent = 'Ошибка загрузки: ' + e.message;
+        status.style.color = '#ff6b6b';
         status.style.display = 'block';
     }
 }
@@ -488,13 +400,12 @@ async function translateUrl(url = null) {
         return;
     }
     
-    // Валидация URL
     if(!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
         alert('Ссылка должна начинаться с http:// или https://');
         return;
     }
     
-    console.log('\n🔄 Translating:', inputUrl);
+    console.log('🔄 Translating:', inputUrl);
     
     document.getElementById('newsSection').style.display = 'none';
     document.getElementById('result').style.display = 'none';
@@ -502,7 +413,6 @@ async function translateUrl(url = null) {
 
     try {
         const apiUrl = `${API_BASE}/translate`;
-        console.log('📡 Posting to:', apiUrl);
         
         const res = await fetch(apiUrl, {
             method: 'POST',
@@ -510,17 +420,13 @@ async function translateUrl(url = null) {
             body: JSON.stringify({url: inputUrl})
         });
         
-        console.log('📊 Response status:', res.status);
-        
         if(!res.ok) {
             const errData = await res.json();
-            console.error('❌ Server error:', errData);
             throw new Error(errData.error || `HTTP ${res.status}`);
         }
         
         const data = await res.json();
-        console.log('✅ Translation received');
-        console.log('📊 Word count:', data.word_count);
+        console.log('✅ Translated. Words:', data.word_count);
         
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = `
@@ -532,11 +438,9 @@ async function translateUrl(url = null) {
         
         window.scrollTo({top: 0, behavior: 'smooth'});
         
-        console.log('✅ Article displayed\n');
-        
     } catch(e) {
-        console.error('❌ Translation error:', e);
-        alert('Ошибка перевода: ' + e.message + '\n\nПроверьте что сервер запущен на ' + API_BASE);
+        console.error('❌', e);
+        alert('Ошибка перевода: ' + e.message);
         goHome();
     } finally {
         document.getElementById('loader').style.display = 'none';
@@ -550,8 +454,6 @@ async function translateText() {
         alert('Введите текст!');
         return;
     }
-    
-    console.log('\n🔄 Translating text:', text.length, 'chars');
     
     document.getElementById('loader').style.display = 'block';
 
@@ -569,8 +471,6 @@ async function translateText() {
         
         const data = await res.json();
         
-        console.log('✅ Text translated\n');
-        
         document.getElementById('result').innerHTML = `
             <button class="back-btn" onclick="goHome()">← Назад</button>
             <div style="background: var(--bg); padding: 20px; border-radius: 8px;">
@@ -584,7 +484,6 @@ async function translateText() {
         window.scrollTo({top: 0, behavior: 'smooth'});
         
     } catch(e) { 
-        console.error('❌ Text translation error:', e);
         alert('Ошибка перевода: ' + e.message);
     } finally { 
         document.getElementById('loader').style.display = 'none'; 
