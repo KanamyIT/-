@@ -1,115 +1,60 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 import uvicorn
 
 app = FastAPI()
 
-class TranslateRequest(BaseModel):
-    url: str
-
-# ========== ВСТРОЕННЫЕ СТАТЬИ ==========
-
-ARTICLES = {
-    "programming": [
-        {"title": "Python для начинающих - полный курс", "url": "https://realpython.com/"},
-        {"title": "FastAPI - современный веб-фреймворк", "url": "https://fastapi.tiangolo.com/"},
-        {"title": "JavaScript async/await объяснение", "url": "https://developer.mozilla.org/"},
-        {"title": "React Hooks - подробный гайд", "url": "https://react.dev/"},
-        {"title": "Docker контейнеры для разработчиков", "url": "https://docs.docker.com/"},
-    ],
-    "history": [
-        {"title": "Древний Рим - история империи", "url": "https://www.britannica.com/"},
-        {"title": "Египетские пирамиды - тайны", "url": "https://www.nationalgeographic.com/"},
-    ],
-    "gaming": [
-        {"title": "Dota 2 - новый патч обзор", "url": "https://www.dota2.com/"},
-        {"title": "Clash Royale - лучшие стратегии", "url": "https://clashroyale.com/"},
-    ],
-    "movies": [
-        {"title": "Топ фильмов 2025 года", "url": "https://www.imdb.com/"},
-        {"title": "Netflix новинки января", "url": "https://www.netflix.com/"},
-    ]
-}
-
-# ========== ГЛАВНАЯ СТРАНИЦА ==========
-
 @app.get("/", response_class=HTMLResponse)
-def home(category: str = "programming"):
-    
-    articles = ARTICLES.get(category, ARTICLES["programming"])
-    
-    html = f"""
-<!DOCTYPE html>
+def home():
+    return """<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News/Translate by Kanamy</title>
     <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        body {
+            font-family: -apple-system, sans-serif;
             background: #0a0a0a;
             color: #e8e8e8;
-            line-height: 1.6;
-            min-height: 100vh;
-        }}
-
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
             padding: 20px;
-        }}
+        }
 
-        header {{
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        h1 {
             text-align: center;
-            padding: 40px 20px;
-            border-bottom: 1px solid #2a2a2a;
-            margin-bottom: 40px;
-        }}
-
-        h1 {{
-            font-size: 42px;
+            font-size: 40px;
             font-weight: 300;
-            margin-bottom: 30px;
-        }}
+            margin: 40px 0;
+        }
 
-        h1 span {{
-            color: #FF6B35;
-            font-weight: 600;
-        }}
+        h1 span { color: #FF6B35; }
 
-        .input-box {{
+        .input-box {
             max-width: 600px;
             margin: 0 auto 40px;
             background: #1a1a1a;
             padding: 24px;
             border-radius: 12px;
-            border: 1px solid #2a2a2a;
-        }}
+        }
 
-        input {{
+        input {
             width: 100%;
             padding: 14px;
             background: #0a0a0a;
-            border: 1px solid #2a2a2a;
+            border: 1px solid #333;
             border-radius: 8px;
-            color: #e8e8e8;
+            color: #fff;
             font-size: 15px;
             margin-bottom: 12px;
-        }}
+        }
 
-        input:focus {{
-            outline: none;
-            border-color: #FF6B35;
-        }}
-
-        button {{
+        button {
             width: 100%;
             padding: 14px;
             background: #FF6B35;
@@ -117,191 +62,267 @@ def home(category: str = "programming"):
             border: none;
             border-radius: 8px;
             font-size: 15px;
-            font-weight: 500;
             cursor: pointer;
-            transition: 0.2s;
-        }}
+        }
 
-        button:hover {{
-            background: #ff8555;
-            transform: translateY(-1px);
-        }}
+        button:hover { background: #ff8555; }
 
-        .categories {{
+        .tabs {
             display: flex;
             gap: 12px;
             justify-content: center;
-            flex-wrap: wrap;
             margin-bottom: 40px;
-        }}
+        }
 
-        .cat-btn {{
+        .tab {
             padding: 10px 24px;
             background: #1a1a1a;
-            color: #888;
-            text-decoration: none;
+            border: 1px solid #333;
             border-radius: 8px;
-            border: 1px solid #2a2a2a;
-            transition: 0.2s;
-            display: inline-block;
-        }}
+            cursor: pointer;
+        }
 
-        .cat-btn:hover {{
-            border-color: #FF6B35;
-            color: #FF6B35;
-        }}
-
-        .cat-btn.active {{
+        .tab.active {
             background: #FF6B35;
-            color: white;
             border-color: #FF6B35;
-        }}
+        }
 
-        .grid {{
+        .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
-            margin-top: 40px;
-        }}
+        }
 
-        .card {{
+        .card {
             background: #1a1a1a;
             padding: 24px;
             border-radius: 12px;
-            border: 1px solid #2a2a2a;
+            border: 1px solid #333;
             cursor: pointer;
             transition: 0.2s;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }}
+        }
 
-        .card:hover {{
+        .card:hover {
             transform: translateY(-4px);
             border-color: #FF6B35;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }}
+        }
 
-        .tag {{
+        .tag {
             font-size: 10px;
             color: #FF6B35;
             text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-        }}
+            margin-bottom: 8px;
+        }
 
-        .card-title {{
-            font-size: 17px;
-            font-weight: 500;
+        .card-title {
+            font-size: 16px;
             line-height: 1.4;
-        }}
+        }
 
-        .loading {{
-            text-align: center;
-            padding: 60px 20px;
-            color: #888;
+        #article {
             display: none;
-        }}
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            margin-top: 40px;
+        }
 
-        .spinner {{
+        #article h1, #article h2 { color: #FF6B35; margin: 20px 0 10px; }
+        #article p { margin: 12px 0; line-height: 1.7; }
+        #article img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 60px;
+            color: #888;
+        }
+
+        .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #2a2a2a;
+            border: 3px solid #333;
             border-top-color: #FF6B35;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }}
+            margin: 0 auto 20px;
+        }
 
-        @keyframes spin {{
-            100% {{ transform: rotate(360deg); }}
-        }}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        @media (max-width: 768px) {{
-            h1 {{ font-size: 32px; }}
-            .grid {{ grid-template-columns: 1fr; }}
-        }}
+        .back {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>Умный <span>переводчик</span></h1>
-        
-        <div class="input-box">
-            <form action="/translate" method="post" id="translateForm">
-                <input type="url" name="url" placeholder="https://example.com/article" required>
-                <button type="submit">Перевести статью</button>
-            </form>
+    <h1>Умный <span>переводчик</span></h1>
+
+    <div class="input-box">
+        <input type="text" id="urlInput" placeholder="https://example.com/article">
+        <button onclick="translateUrl()">Перевести</button>
+    </div>
+
+    <div id="news">
+        <div class="tabs">
+            <div class="tab active" onclick="showCategory('programming')">Программирование</div>
+            <div class="tab" onclick="showCategory('history')">История</div>
+            <div class="tab" onclick="showCategory('gaming')">Игры</div>
+            <div class="tab" onclick="showCategory('movies')">Кино</div>
         </div>
-    </header>
-
-    <div class="categories">
-        <a href="/?category=programming" class="cat-btn {'active' if category == 'programming' else ''}">Программирование</a>
-        <a href="/?category=history" class="cat-btn {'active' if category == 'history' else ''}">История</a>
-        <a href="/?category=gaming" class="cat-btn {'active' if category == 'gaming' else ''}">Игры</a>
-        <a href="/?category=movies" class="cat-btn {'active' if category == 'movies' else ''}">Кино</a>
+        <div class="grid" id="grid"></div>
     </div>
 
-    <div class="grid">
-"""
-    
-    for article in articles:
-        html += f"""
-        <a href="/article?url={article['url']}" class="card">
-            <div class="tag">{category.upper()}</div>
-            <div class="card-title">{article['title']}</div>
-        </a>
-"""
-    
-    html += """
-    </div>
-
-    <div class="loading" id="loading">
+    <div class="loader" id="loader">
         <div class="spinner"></div>
-        <p>Загрузка статьи...</p>
+        <p>Загрузка...</p>
+    </div>
+
+    <div id="article">
+        <div class="back" onclick="goBack()">← Назад</div>
+        <div id="articleContent"></div>
     </div>
 </div>
 
 <script>
-document.getElementById('translateForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const url = this.url.value;
-    if (url) {
-        window.location.href = '/article?url=' + encodeURIComponent(url);
+console.log('✅ Скрипт загружен');
+
+// Встроенные статьи
+const articles = {
+    programming: [
+        {title: 'Python для начинающих - полное руководство', url: 'https://realpython.com/'},
+        {title: 'FastAPI - современный веб-фреймворк', url: 'https://fastapi.tiangolo.com/'},
+        {title: 'JavaScript async/await подробно', url: 'https://developer.mozilla.org/'},
+        {title: 'React Hooks - детальный гайд', url: 'https://react.dev/'},
+        {title: 'Docker контейнеры для разработчиков', url: 'https://docs.docker.com/'},
+    ],
+    history: [
+        {title: 'Древний Рим - история империи', url: 'https://www.britannica.com/'},
+        {title: 'Египетские пирамиды - секреты строительства', url: 'https://www.nationalgeographic.com/'},
+    ],
+    gaming: [
+        {title: 'Dota 2 - обзор нового патча', url: 'https://www.dota2.com/'},
+        {title: 'Clash Royale - топ стратегии', url: 'https://clashroyale.com/'},
+    ],
+    movies: [
+        {title: 'Лучшие фильмы 2025 года', url: 'https://www.imdb.com/'},
+        {title: 'Netflix - новинки января', url: 'https://www.netflix.com/'},
+    ]
+};
+
+let currentCategory = 'programming';
+
+function showCategory(category) {
+    console.log('📰 Показываю категорию:', category);
+    
+    currentCategory = category;
+    
+    // Обновляем активную вкладку
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Рендерим карточки
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    
+    articles[category].forEach(article => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="tag">${category.toUpperCase()}</div>
+            <div class="card-title">${article.title}</div>
+        `;
+        card.onclick = () => loadArticle(article.url);
+        grid.appendChild(card);
+    });
+    
+    console.log('✅ Показано карточек:', articles[category].length);
+}
+
+async function loadArticle(url) {
+    console.log('🔄 Загружаю статью:', url);
+    
+    // Скрываем новости, показываем загрузку
+    document.getElementById('news').style.display = 'none';
+    document.getElementById('article').style.display = 'none';
+    document.getElementById('loader').style.display = 'block';
+    
+    try {
+        const formData = new FormData();
+        formData.append('url', url);
+        
+        const response = await fetch('/translate', {
+            method: 'POST',
+            body: formData
+        });
+        
+        console.log('📡 Ответ:', response.status);
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки');
+        }
+        
+        const html = await response.text();
+        console.log('✅ Статья загружена');
+        
+        document.getElementById('articleContent').innerHTML = html;
+        document.getElementById('article').style.display = 'block';
+        
+    } catch (error) {
+        console.error('❌ Ошибка:', error);
+        alert('Не удалось загрузить статью: ' + error.message);
+        goBack();
+    } finally {
+        document.getElementById('loader').style.display = 'none';
     }
-});
+}
+
+function translateUrl() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) {
+        alert('Введите URL!');
+        return;
+    }
+    loadArticle(url);
+}
+
+function goBack() {
+    document.getElementById('article').style.display = 'none';
+    document.getElementById('news').style.display = 'block';
+    showCategory(currentCategory);
+}
+
+// Инициализация
+console.log('🚀 Инициализация...');
+showCategory('programming');
+console.log('✅ Готово!');
 </script>
 
 </body>
-</html>
-"""
-    
-    return HTMLResponse(content=html)
+</html>"""
 
-# ========== СТРАНИЦА СТАТЬИ ==========
-
-@app.get("/article", response_class=HTMLResponse)
-def show_article(url: str):
-    
-    print(f"\n{'='*60}")
-    print(f"🔄 Загрузка статьи: {url}")
+@app.post("/translate")
+async def translate(url: str = Form(...)):
+    print(f"\n🔄 Перевод: {url}")
     
     try:
-        # Загружаем страницу
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         response = requests.get(url, headers=headers, timeout=10)
+        
         print(f"✅ Статус: {response.status_code}")
         
         if response.status_code != 200:
-            raise Exception(f"HTTP {response.status_code}")
+            return f"<p style='color:#ff6b6b'>Ошибка загрузки (HTTP {response.status_code})</p>"
         
-        # Парсим
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Заголовок
@@ -315,124 +336,30 @@ def show_article(url: str):
         content = soup.find('article') or soup.find('main') or soup.find('body')
         
         if content:
-            # Удаляем мусор
             for tag in content(['script', 'style', 'nav', 'header', 'footer', 'aside']):
                 tag.decompose()
             
-            # Стили для изображений
             for img in content.find_all('img'):
                 img['style'] = 'max-width:100%; border-radius:8px;'
             
-            content_html = str(content)
+            html = f"<h1>{title}</h1>{str(content)}"
         else:
-            content_html = "<p>Контент не найден</p>"
+            html = "<p>Контент не найден</p>"
         
-        print(f"✅ Успешно загружено")
-        print(f"{'='*60}\n")
+        print(f"✅ Успешно\n")
+        return html
         
     except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        print(f"{'='*60}\n")
-        title = "Ошибка"
-        content_html = f"<p style='color:#ff6b6b;'>Не удалось загрузить статью: {str(e)}</p>"
-    
-    html = f"""
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0a;
-            color: #e8e8e8;
-            line-height: 1.7;
-        }}
-
-        .container {{
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }}
-
-        .back-btn {{
-            display: inline-block;
-            padding: 10px 20px;
-            background: #1a1a1a;
-            color: #e8e8e8;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border: 1px solid #2a2a2a;
-            transition: 0.2s;
-        }}
-
-        .back-btn:hover {{
-            border-color: #FF6B35;
-            background: #2a2a2a;
-        }}
-
-        article {{
-            background: #1a1a1a;
-            padding: 40px;
-            border-radius: 12px;
-            border: 1px solid #2a2a2a;
-        }}
-
-        h1, h2, h3 {{
-            color: #FF6B35;
-            margin: 20px 0 12px;
-        }}
-
-        p {{
-            margin: 12px 0;
-            line-height: 1.8;
-        }}
-
-        img {{
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 20px 0;
-        }}
-
-        a {{
-            color: #FF6B35;
-        }}
-
-        @media (max-width: 768px) {{
-            article {{ padding: 24px; }}
-        }}
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <a href="/" class="back-btn">← Назад к новостям</a>
-    
-    <article>
-        <h1>{title}</h1>
-        {content_html}
-    </article>
-</div>
-
-</body>
-</html>
-"""
-    
-    return HTMLResponse(content=html)
+        print(f"❌ Ошибка: {e}\n")
+        return f"<p style='color:#ff6b6b'>Ошибка: {str(e)}</p>"
 
 if __name__ == "__main__":
     print("\n" + "="*70)
     print("🚀 СЕРВЕР ЗАПУЩЕН")
     print("="*70)
-    print("📍 Откройте: http://localhost:8000")
-    print("✅ Статьи рендерятся на сервере - никаких fetch запросов!")
-    print("✅ Минимум JavaScript - максимум надежности!")
+    print("📍 http://localhost:8000")
+    print("✅ Статьи встроены в HTML - показываются СРАЗУ!")
+    print("✅ Никаких внешних запросов для статей!")
     print("="*70 + "\n")
     
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
