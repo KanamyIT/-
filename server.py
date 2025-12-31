@@ -8,6 +8,7 @@ from deep_translator import GoogleTranslator
 import random
 from functools import lru_cache
 import uvicorn
+import os
 
 app = FastAPI()
 
@@ -44,7 +45,7 @@ RSS_SOURCES = {
 }
 
 def translate_html_content(soup):
-    """Переводит HTML"""
+    """Переводит HTML контент"""
     translator = GoogleTranslator(source='auto', target='ru')
     
     content = None
@@ -127,186 +128,37 @@ def fetch_feed_category(category):
     
     return all_articles
 
-# ГЛАВНАЯ СТРАНИЦА - HTML ВСТРОЕН В КОД
+# ЧИТАЕМ index.html
 @app.get("/", response_class=HTMLResponse)
 def home():
-    return """<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News/Translate by Kanamy</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+    try:
+        # Пытаемся найти файл в разных местах
+        possible_paths = [
+            'index.html',
+            './index.html',
+            os.path.join(os.path.dirname(__file__), 'index.html')
+        ]
         
-        h1 { text-align: center; font-size: 36px; margin: 40px 0; }
-        h1 span { color: #FF6B35; }
+        for path in possible_paths:
+            if os.path.exists(path):
+                print(f"✅ Found index.html at: {path}")
+                with open(path, 'r', encoding='utf-8') as f:
+                    return f.read()
         
-        .input-box { max-width: 600px; margin: 0 auto 40px; background: #1a1a1a; padding: 24px; border-radius: 12px; }
-        input { width: 100%; padding: 14px; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 15px; margin-bottom: 12px; }
-        button { width: 100%; padding: 14px; background: #FF6B35; color: #fff; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
-        button:hover { background: #ff8555; }
+        # Если не нашли - ошибка
+        print("❌ index.html not found!")
+        return HTMLResponse(
+            content="<h1>Error: index.html not found</h1>",
+            status_code=500
+        )
         
-        .categories { display: flex; gap: 12px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
-        .cat-btn { padding: 10px 24px; background: #1a1a1a; border: 1px solid #333; color: #fff; cursor: pointer; border-radius: 8px; }
-        .cat-btn.active { background: #FF6B35; border-color: #FF6B35; }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 40px 0; }
-        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; cursor: pointer; border: 2px solid #333; transition: 0.2s; }
-        .card:hover { border-color: #FF6B35; transform: translateY(-4px); }
-        .tag { font-size: 10px; color: #FF6B35; margin-bottom: 8px; font-weight: 600; }
-        .card-title { font-size: 18px; line-height: 1.4; }
-        
-        #article { display: none; background: #1a1a1a; padding: 40px; border-radius: 12px; margin: 40px 0; }
-        #article h1, #article h2 { color: #FF6B35; margin: 20px 0; }
-        #article p { line-height: 1.7; margin: 15px 0; }
-        #article img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
-        
-        .back { display: inline-block; padding: 12px 24px; background: #FF6B35; color: #fff; cursor: pointer; border-radius: 8px; margin-bottom: 20px; }
-        .loader { display: none; text-align: center; padding: 60px; font-size: 18px; }
-        .spinner { width: 50px; height: 50px; border: 4px solid #333; border-top-color: #FF6B35; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .status { text-align: center; padding: 40px; color: #888; }
-    </style>
-</head>
-<body>
+    except Exception as e:
+        print(f"❌ Error reading index.html: {e}")
+        return HTMLResponse(
+            content=f"<h1>Error: {str(e)}</h1>",
+            status_code=500
+        )
 
-<div class="container">
-    <h1>Умный <span>переводчик</span></h1>
-    
-    <div class="input-box">
-        <input type="text" id="urlInput" placeholder="https://example.com/article">
-        <button onclick="translateUrl()">Перевести статью</button>
-    </div>
-    
-    <div id="news">
-        <div class="categories">
-            <button class="cat-btn active" onclick="loadCat('programming')">Программирование</button>
-            <button class="cat-btn" onclick="loadCat('history')">История</button>
-            <button class="cat-btn" onclick="loadCat('gaming')">Игры</button>
-            <button class="cat-btn" onclick="loadCat('movies')">Кино</button>
-        </div>
-        <div class="status" id="status">Загрузка...</div>
-        <div class="grid" id="grid"></div>
-    </div>
-    
-    <div class="loader" id="loader"><div class="spinner"></div><p>Загрузка статьи...</p></div>
-    
-    <div id="article">
-        <div class="back" onclick="goBack()">← Назад</div>
-        <div id="content"></div>
-    </div>
-</div>
-
-<script>
-console.log('🚀 App started');
-
-async function loadCat(cat) {
-    console.log('📰 Category:', cat);
-    
-    document.querySelectorAll('.cat-btn').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    const grid = document.getElementById('grid');
-    const status = document.getElementById('status');
-    
-    grid.innerHTML = '';
-    status.style.display = 'block';
-    status.textContent = 'Загрузка статей...';
-    
-    try {
-        const res = await fetch('/feed?category=' + cat);
-        
-        console.log('📡 Response status:', res.status);
-        
-        if (!res.ok) {
-            throw new Error('HTTP ' + res.status);
-        }
-        
-        const data = await res.json();
-        console.log('✅ Articles:', data.articles.length);
-        
-        status.style.display = 'none';
-        
-        if (data.articles.length === 0) {
-            status.textContent = 'Нет статей';
-            status.style.display = 'block';
-            return;
-        }
-        
-        data.articles.forEach(art => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = '<div class="tag">' + art.tag + '</div><div class="card-title">' + art.title + '</div>';
-            card.onclick = () => openArticle(art.link);
-            grid.appendChild(card);
-        });
-        
-        console.log('✅ Rendered', data.articles.length, 'cards');
-        
-    } catch(e) {
-        console.error('❌ Error:', e);
-        status.textContent = 'Ошибка загрузки: ' + e.message;
-        status.style.color = '#ff6b6b';
-    }
-}
-
-async function translateUrl() {
-    const url = document.getElementById('urlInput').value.trim();
-    if (!url) {
-        alert('Введите URL!');
-        return;
-    }
-    openArticle(url);
-}
-
-async function openArticle(url) {
-    console.log('🔄 Loading:', url);
-    
-    document.getElementById('news').style.display = 'none';
-    document.getElementById('article').style.display = 'none';
-    document.getElementById('loader').style.display = 'block';
-    
-    try {
-        const res = await fetch('/translate', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({url: url})
-        });
-        
-        const data = await res.json();
-        
-        if (data.error) throw new Error(data.error);
-        
-        console.log('✅ Article loaded');
-        
-        document.getElementById('content').innerHTML = data.translated_html;
-        document.getElementById('article').style.display = 'block';
-        window.scrollTo(0, 0);
-        
-    } catch(e) {
-        console.error('❌ Error:', e);
-        alert('Ошибка: ' + e.message);
-        goBack();
-    } finally {
-        document.getElementById('loader').style.display = 'none';
-    }
-}
-
-function goBack() {
-    document.getElementById('article').style.display = 'none';
-    document.getElementById('news').style.display = 'block';
-}
-
-loadCat('programming');
-</script>
-
-</body>
-</html>"""
-
-# API ENDPOINTS
 @app.get("/feed")
 def get_feed(category: str = "programming"):
     print(f"\n📰 Feed request: {category}")
@@ -362,6 +214,13 @@ if __name__ == "__main__":
     print("🚀 NEWS TRANSLATOR")
     print("="*70)
     print("📍 http://localhost:8000")
+    
+    # Проверяем есть ли index.html
+    if os.path.exists('index.html'):
+        print("✅ index.html found")
+    else:
+        print("❌ WARNING: index.html NOT found!")
+    
     print("="*70 + "\n")
     
     uvicorn.run(app, host="0.0.0.0", port=8000)
