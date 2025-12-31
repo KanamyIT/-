@@ -284,7 +284,11 @@
 <script>
 console.log('🚀 App started');
 
+// API base URL - меняй на свой если деплоишь
+const API_BASE = window.location.origin;
+
 window.onload = function() {
+    console.log('📍 API Base:', API_BASE);
     loadCategory('programming', document.querySelector('.cat-btn.active'));
 };
 
@@ -312,7 +316,7 @@ function switchMode(mode) {
 }
 
 async function loadCategory(cat, btn) {
-    console.log('📰 Category:', cat);
+    console.log('\n📰 Loading category:', cat);
     
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
@@ -323,44 +327,57 @@ async function loadCategory(cat, btn) {
     grid.innerHTML = '';
     status.textContent = 'Загружаю статьи...';
     status.style.display = 'block';
+    status.style.color = 'var(--text-dim)';
 
     try {
-        const res = await fetch('/feed?category=' + cat);
+        const url = `${API_BASE}/feed?category=${cat}`;
+        console.log('📡 Fetching:', url);
         
-        console.log('📡 Response:', res.status);
+        const res = await fetch(url);
+        
+        console.log('📊 Response status:', res.status);
         
         if(!res.ok) {
-            throw new Error('Ошибка: ' + res.status);
+            throw new Error(`HTTP ${res.status}`);
         }
         
         const data = await res.json();
-        console.log('✅ Data:', data);
+        console.log('✅ Data received:', data);
+        console.log('📦 Articles count:', data.articles?.length || 0);
         
         status.style.display = 'none';
         
         if(!data.articles || data.articles.length === 0) {
-            status.textContent = 'Нет статей';
+            status.textContent = 'Нет статей в этой категории';
             status.style.display = 'block';
             return;
         }
 
-        data.articles.forEach(art => {
+        // Отрисовываем карточки
+        data.articles.forEach((art, idx) => {
+            // Проверяем что у статьи есть ссылка
+            if(!art.link || !art.link.startsWith('http')) {
+                console.warn(`⚠️ Invalid link for article ${idx}:`, art);
+                return;
+            }
+            
             const card = document.createElement('div');
             card.className = 'news-card';
             card.innerHTML = `
-                <div class="tag-badge">${art.tag}</div>
-                <div class="news-title">${art.title}</div>
+                <div class="tag-badge">${art.tag || 'NEWS'}</div>
+                <div class="news-title">${art.title || 'Без названия'}</div>
             `;
             card.onclick = () => translateUrl(art.link);
             grid.appendChild(card);
         });
         
-        console.log('✅ Cards rendered:', data.articles.length);
+        console.log('✅ Rendered', grid.children.length, 'cards\n');
         
     } catch(e) { 
-        console.error('❌ Error:', e);
+        console.error('❌ Load error:', e);
         status.textContent = 'Ошибка загрузки: ' + e.message;
         status.style.color = '#ff6b6b';
+        status.style.display = 'block';
     }
 }
 
@@ -372,38 +389,55 @@ async function translateUrl(url = null) {
         return;
     }
     
-    console.log('🔄 Translating:', inputUrl);
+    // Валидация URL
+    if(!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
+        alert('Ссылка должна начинаться с http:// или https://');
+        return;
+    }
+    
+    console.log('\n🔄 Translating:', inputUrl);
     
     document.getElementById('newsSection').style.display = 'none';
     document.getElementById('result').style.display = 'none';
     document.getElementById('loader').style.display = 'block';
 
     try {
-        const res = await fetch('/translate', {
+        const apiUrl = `${API_BASE}/translate`;
+        console.log('📡 Posting to:', apiUrl);
+        
+        const res = await fetch(apiUrl, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({url: inputUrl})
         });
         
-        console.log('📡 Status:', res.status);
+        console.log('📊 Response status:', res.status);
         
         if(!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'Ошибка сервера');
+            const errData = await res.json();
+            console.error('❌ Server error:', errData);
+            throw new Error(errData.error || `HTTP ${res.status}`);
         }
         
         const data = await res.json();
-        console.log('✅ Translated');
+        console.log('✅ Translation received');
+        console.log('📊 Word count:', data.word_count);
         
         const resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = '<button class="back-btn" onclick="goHome()">← Назад</button>' + data.translated_html;
+        resultDiv.innerHTML = `
+            <button class="back-btn" onclick="goHome()">← Назад</button>
+            <p style="color: var(--text-dim); margin-bottom: 20px;">Переведено слов: ${data.word_count}</p>
+            ${data.translated_html}
+        `;
         resultDiv.style.display = 'block';
         
         window.scrollTo({top: 0, behavior: 'smooth'});
         
+        console.log('✅ Article displayed\n');
+        
     } catch(e) {
-        console.error('❌', e);
-        alert('Ошибка: ' + e.message);
+        console.error('❌ Translation error:', e);
+        alert('Ошибка перевода: ' + e.message);
         goHome();
     } finally {
         document.getElementById('loader').style.display = 'none';
@@ -418,22 +452,41 @@ async function translateText() {
         return;
     }
     
+    console.log('\n🔄 Translating text:', text.length, 'chars');
+    
     document.getElementById('loader').style.display = 'block';
 
     try {
-        const res = await fetch('/translate_text', {
+        const res = await fetch(`${API_BASE}/translate_text`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({text: text})
         });
         
+        if(!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Ошибка сервера');
+        }
+        
         const data = await res.json();
         
-        document.getElementById('result').innerHTML = '<button class="back-btn" onclick="goHome()">← Назад</button><p>' + data.result + '</p>';
+        console.log('✅ Text translated\n');
+        
+        document.getElementById('result').innerHTML = `
+            <button class="back-btn" onclick="goHome()">← Назад</button>
+            <div style="background: var(--bg); padding: 20px; border-radius: 8px;">
+                <h3 style="color: var(--orange); margin-bottom: 10px;">Перевод:</h3>
+                <p style="line-height: 1.8;">${data.result}</p>
+            </div>
+        `;
         document.getElementById('result').style.display = 'block';
+        document.getElementById('newsSection').style.display = 'none';
+        
+        window.scrollTo({top: 0, behavior: 'smooth'});
         
     } catch(e) { 
-        alert('Ошибка перевода');
+        console.error('❌ Text translation error:', e);
+        alert('Ошибка перевода: ' + e.message);
     } finally { 
         document.getElementById('loader').style.display = 'none'; 
     }
