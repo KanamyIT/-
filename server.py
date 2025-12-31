@@ -327,8 +327,8 @@ if __name__ == "__main__":
     print("\n" + "="*70)
     print("🚀 NEWS TRANSLATOR SERVER")
     print("="*70)
-    print("📍 URL: http://localhost:8001")
-    print("📍 API: http://localhost:8001/docs")
+    print("📍 URL: http://localhost:8002")
+    print("📍 API: http://localhost:8002/docs")
     
     # Проверяем файлы
     html_files = ['index.html', 'index-4.html']
@@ -343,4 +343,4 @@ if __name__ == "__main__":
     
     print("="*70 + "\n")
     
-    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=8002, log_level="info")
