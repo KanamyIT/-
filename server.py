@@ -12,7 +12,7 @@ import time
 
 app = FastAPI()
 
-# CORS
+# CORS - разрешаем запросы с любых доменов
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -106,7 +106,7 @@ def translate_html_content(soup):
     return str(content), word_count
 
 def fetch_feed_category(category):
-    """Загружает RSS - БЕЗ кеширования для отладки"""
+    """Загружает RSS"""
     urls = RSS_SOURCES.get(category, [])
     all_articles = []
     
