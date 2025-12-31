@@ -1,19 +1,33 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 
 app = FastAPI()
 
+# ========== ПРАВИЛЬНЫЙ CORS ==========
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # Изменено на False для * origins
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
+
+# Добавляем обработчик OPTIONS для всех маршрутов
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return JSONResponse(
+        content={},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 class LinkRequest(BaseModel):
     url: str
@@ -81,21 +95,6 @@ HTML_PAGE = """
             pointer-events: none;
         }
 
-        .cursor-trail {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--orange);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: trailFade 1s ease-out forwards;
-            z-index: 9999;
-        }
-        
-        @keyframes trailFade {
-            to { transform: scale(3); opacity: 0; }
-        }
-
         header { 
             position: sticky;
             top: 0;
@@ -135,12 +134,9 @@ HTML_PAGE = """
             margin-bottom: 40px;
             color: var(--text);
             min-height: 60px;
-            letter-spacing: -1px;
         }
         
-        .hero h1 span {
-            color: var(--orange);
-        }
+        .hero h1 span { color: var(--orange); }
 
         .tabs { 
             display: inline-flex;
@@ -166,7 +162,6 @@ HTML_PAGE = """
         .tab-btn.active { 
             background: var(--orange);
             color: #fff;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
         }
 
         .input-area { display: none; max-width: 600px; margin: 0 auto; }
@@ -181,12 +176,10 @@ HTML_PAGE = """
             background: var(--surface);
             color: var(--text);
             font-family: inherit;
-            transition: all 0.3s;
         }
         input:focus, textarea:focus { 
             border-color: var(--orange);
             outline: none;
-            box-shadow: 0 0 0 3px var(--orange-dim);
         }
         textarea { resize: vertical; min-height: 120px; }
 
@@ -201,50 +194,11 @@ HTML_PAGE = """
             cursor: pointer;
             font-size: 15px;
             transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
+            width: 100%;
         }
-        .btn-main::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        .btn-main:hover::before { width: 300px; height: 300px; }
         .btn-main:hover { 
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
-        }
-
-        .history-box { margin-top: 30px; display: none; }
-        .history-title { 
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            margin-bottom: 12px;
-        }
-        .history-item { 
-            background: var(--surface);
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            gap: 12px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
-        .history-item:hover { 
-            border-color: var(--orange);
-            transform: translateX(4px);
         }
 
         .categories { 
@@ -264,31 +218,17 @@ HTML_PAGE = """
             cursor: pointer;
             transition: all 0.3s;
             border-radius: 8px;
-            font-size: 14px;
-            position: relative;
         }
-        .cat-btn::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: var(--orange);
-            transition: all 0.3s;
-            transform: translateX(-50%);
-        }
-        .cat-btn:hover::after { width: 80%; }
         .cat-btn.active { 
             background: var(--orange);
             color: #fff;
-            border-color: var(--orange);
         }
 
         .news-grid { 
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 24px;
+            min-height: 200px;
         }
         
         .news-card { 
@@ -296,44 +236,12 @@ HTML_PAGE = """
             padding: 24px;
             border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s;
             border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
         }
-        .news-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--orange);
-            transform: scaleX(0);
-            transition: transform 0.3s;
-        }
-        .news-card::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(45deg, transparent, var(--orange), transparent);
-            background-size: 200% 200%;
-            border-radius: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: -1;
-            animation: cardGlow 3s linear infinite;
-        }
-        @keyframes cardGlow {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-        .news-card:hover::before { transform: scaleX(1); }
-        .news-card:hover::after { opacity: 0.2; }
         .news-card:hover { 
             transform: translateY(-4px);
             border-color: var(--orange);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
         }
         
         .tag-badge { 
@@ -341,7 +249,6 @@ HTML_PAGE = """
             font-weight: 600;
             color: var(--orange);
             text-transform: uppercase;
-            letter-spacing: 1px;
             margin-bottom: 12px;
         }
         
@@ -349,34 +256,6 @@ HTML_PAGE = """
             font-size: 17px;
             font-weight: 500;
             line-height: 1.5;
-            margin-bottom: 12px;
-        }
-
-        .article-controls { 
-            display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-        }
-        
-        .control-btn { 
-            padding: 8px 16px;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            border-radius: 6px;
-            display: flex;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-        .control-btn:hover { 
-            border-color: var(--orange);
-            background: var(--orange-dim);
         }
 
         .article-view { 
@@ -389,74 +268,39 @@ HTML_PAGE = """
             font-size: 17px;
             border: 1px solid var(--border);
         }
-        .article-view img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            margin: 20px 0;
-        }
-
-        .text-result { 
-            background: var(--surface);
-            padding: 30px;
-            border-radius: 12px;
-            margin-top: 30px;
-            display: none;
-            border-left: 3px solid var(--orange);
-            font-size: 17px;
-        }
 
         .loader { 
             display: none;
             margin: 40px auto;
             width: 40px;
             height: 40px;
-            position: relative;
-        }
-        .loader::before, .loader::after {
-            content: '';
-            position: absolute;
-            border: 2px solid var(--orange);
+            border: 3px solid var(--border);
+            border-top-color: var(--orange);
             border-radius: 50%;
-            animation: ripple 1.5s infinite;
+            animation: spin 1s linear infinite;
         }
-        .loader::before { width: 40px; height: 40px; }
-        .loader::after { width: 40px; height: 40px; animation-delay: 0.75s; }
-        @keyframes ripple {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .reading-progress {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--orange) 0%, #ff8c61 100%);
-            z-index: 1000;
-            width: 0%;
-            transition: width 0.1s;
+        .error-msg {
+            background: rgba(255, 50, 50, 0.1);
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            color: #ff6b6b;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 600px;
+            display: none;
         }
 
         @media (max-width: 768px) {
             .hero h1 { font-size: 32px; }
-            .article-view { padding: 24px; font-size: 16px; }
-            .container { padding: 40px 16px; }
+            .article-view { padding: 24px; }
             .news-grid { grid-template-columns: 1fr; }
         }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { 
-            background: var(--border);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
     </style>
 </head>
 <body>
 
-<div class="reading-progress" id="readingProgress"></div>
 <canvas id="particles"></canvas>
 
 <header>
@@ -465,7 +309,7 @@ HTML_PAGE = """
 
 <div class="container">
     <div class="hero">
-        <h1 id="mainTitle">Умный переводчик</h1>
+        <h1>Умный <span>переводчик</span></h1>
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
@@ -475,18 +319,15 @@ HTML_PAGE = """
         <div id="urlMode" class="input-area active">
             <input type="text" id="urlInput" placeholder="Вставьте ссылку на статью..." />
             <button class="btn-main" onclick="translateUrl()">Перевести</button>
-            
-            <div id="historyBox" class="history-box">
-                <div class="history-title">Недавно просмотрено</div>
-                <div id="historyList"></div>
-            </div>
         </div>
 
         <div id="textMode" class="input-area">
-            <textarea id="textInput" placeholder="Вставьте текст для перевода..."></textarea>
+            <textarea id="textInput" placeholder="Вставьте текст..."></textarea>
             <button class="btn-main" onclick="translateText()">Перевести</button>
         </div>
     </div>
+
+    <div class="error-msg" id="errorMsg"></div>
 
     <div id="newsSection">
         <div class="categories">
@@ -495,33 +336,16 @@ HTML_PAGE = """
             <button class="cat-btn" onclick="loadCategory('gaming', this)">Игры</button>
             <button class="cat-btn" onclick="loadCategory('movies', this)">Кино</button>
         </div>
-        <div class="news-grid" id="newsGrid"></div>
+        <div class="news-grid" id="newsGrid">
+            <p style="grid-column: 1/-1; text-align: center; color: var(--text-dim);">Загрузка...</p>
+        </div>
     </div>
 
     <div class="loader" id="loader"></div>
-    
-    <div id="result" class="article-view">
-        <div class="article-controls">
-            <button class="control-btn" onclick="copyArticle()">📋 Копировать</button>
-        </div>
-        <div id="articleContent"></div>
-    </div>
-    
-    <div id="textResult" class="text-result"></div>
+    <div id="result" class="article-view"></div>
 </div>
 
 <script>
-    const API = '';
-    
-    // Прогресс бар
-    window.addEventListener('scroll', () => {
-        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (winScroll / height) * 100;
-        document.getElementById('readingProgress').style.width = scrolled + '%';
-    });
-
-    // Particles
     const canvas = document.getElementById('particles');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
@@ -557,7 +381,7 @@ HTML_PAGE = """
     }
 
     function initParticles() {
-        for(let i = 0; i < 80; i++) particles.push(new Particle());
+        for(let i = 0; i < 60; i++) particles.push(new Particle());
     }
 
     function animateParticles() {
@@ -574,31 +398,22 @@ HTML_PAGE = """
         canvas.height = window.innerHeight;
     });
 
-    // Cursor trail
-    let lastTrailTime = 0;
-    document.addEventListener('mousemove', (e) => {
-        const now = Date.now();
-        if(now - lastTrailTime < 50) return;
-        lastTrailTime = now;
-        const trail = document.createElement('div');
-        trail.className = 'cursor-trail';
-        trail.style.left = e.pageX + 'px';
-        trail.style.top = e.pageY + 'px';
-        document.body.appendChild(trail);
-        setTimeout(() => trail.remove(), 1000);
-    });
-
     window.onload = function() {
         console.log('🚀 Инициализация');
         loadCategory('programming', document.querySelector('.cat-btn.active'));
-        renderHistory();
     };
+
+    function showError(msg) {
+        const errorDiv = document.getElementById('errorMsg');
+        errorDiv.textContent = msg;
+        errorDiv.style.display = 'block';
+        setTimeout(() => errorDiv.style.display = 'none', 5000);
+    }
 
     function resetView() {
         document.getElementById('result').style.display = 'none';
-        document.getElementById('textResult').style.display = 'none';
         document.getElementById('loader').style.display = 'none';
-        document.querySelector('.hero').style.display = 'block';
+        document.getElementById('errorMsg').style.display = 'none';
     }
 
     function goHome() {
@@ -624,56 +439,39 @@ HTML_PAGE = """
         }
     }
 
-    function saveToHistory(url) {
-        let history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
-        history = history.filter(item => item !== url);
-        history.unshift(url);
-        if(history.length > 3) history.pop();
-        localStorage.setItem('kanamyHistory', JSON.stringify(history));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('historyList');
-        const box = document.getElementById('historyBox');
-        const history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
-        
-        if(history.length === 0) {
-            box.style.display = 'none';
-            return;
-        }
-        
-        box.style.display = 'block';
-        list.innerHTML = "";
-        history.forEach(url => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            const shortUrl = url.length > 50 ? url.substring(0, 50) + '...' : url;
-            item.innerHTML = `<span style="opacity:0.5">🕒</span>${shortUrl}`;
-            item.onclick = () => translateUrl(url);
-            list.appendChild(item);
-        });
-    }
-
     async function loadCategory(cat, btn) {
         console.log('📰 Загрузка категории:', cat);
         resetView();
+        
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         if(btn) btn.classList.add('active');
         
         const grid = document.getElementById('newsGrid');
-        grid.innerHTML = "";
-        document.getElementById('loader').style.display = 'block';
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-dim);">Загрузка...</p>';
 
         try {
-            const res = await fetch(`/feed?category=${cat}`);
+            console.log('📡 Запрос к /feed?category=' + cat);
+            
+            const res = await fetch('/feed?category=' + cat, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            console.log('📨 Статус:', res.status);
+            
+            if(!res.ok) {
+                throw new Error('Ошибка сервера: ' + res.status);
+            }
+            
             const data = await res.json();
             console.log('✅ Получено статей:', data.articles?.length || 0);
             
-            document.getElementById('loader').style.display = 'none';
+            grid.innerHTML = '';
             
             if(!data.articles || data.articles.length === 0) {
-                grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: var(--text-dim);'>Новостей пока нет</p>";
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-dim);">Нет статей</p>';
                 return;
             }
 
@@ -683,52 +481,58 @@ HTML_PAGE = """
                 card.innerHTML = `
                     <div class="tag-badge">${art.tag}</div>
                     <div class="news-title">${art.title}</div>
-                    <div style="font-size:12px; color: var(--text-dim); margin-top: 8px;">${art.original_title}</div>
                 `;
                 card.onclick = () => translateUrl(art.link);
                 grid.appendChild(card);
             });
+            
         } catch(e) { 
-            console.error('❌ Ошибка загрузки ленты:', e);
-            document.getElementById('loader').style.display = 'none';
-            grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: var(--text-dim);'>Ошибка загрузки</p>";
+            console.error('❌ Ошибка загрузки:', e);
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #ff6b6b;">Ошибка загрузки: ' + e.message + '</p>';
+            showError('Ошибка загрузки новостей: ' + e.message);
         }
     }
 
     async function translateUrl(url = null) {
         const inputUrl = url || document.getElementById('urlInput').value;
-        if(!inputUrl) return alert("Введите ссылку!");
+        if(!inputUrl) {
+            showError('Введите ссылку!');
+            return;
+        }
         
-        console.log('🔄 Начинаю перевод:', inputUrl);
-        saveToHistory(inputUrl);
+        console.log('🔄 Перевод:', inputUrl);
         
         document.getElementById('newsSection').style.display = 'none';
         document.getElementById('result').style.display = 'none';
         document.getElementById('loader').style.display = 'block';
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        document.getElementById('errorMsg').style.display = 'none';
 
         try {
             const res = await fetch('/translate', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({url: inputUrl})
             });
             
-            console.log('📨 Статус ответа:', res.status);
+            console.log('📨 Статус:', res.status);
             
             if(!res.ok) {
-                throw new Error(`Server error: ${res.status}`);
+                const errorData = await res.json();
+                throw new Error(errorData.detail || 'Ошибка сервера');
             }
             
             const data = await res.json();
-            console.log('✅ Перевод получен. Слов:', data.word_count);
+            console.log('✅ Перевод получен');
             
-            document.getElementById('articleContent').innerHTML = data.translated_html;
+            document.getElementById('result').innerHTML = data.translated_html;
             document.getElementById('result').style.display = 'block';
             
         } catch(e) {
-            console.error('❌ Ошибка перевода:', e);
-            alert("Ошибка перевода: " + e.message);
+            console.error('❌ Ошибка:', e);
+            showError('Ошибка перевода: ' + e.message);
             goHome();
         } finally {
             document.getElementById('loader').style.display = 'none';
@@ -737,39 +541,36 @@ HTML_PAGE = """
 
     async function translateText() {
         const text = document.getElementById('textInput').value;
-        if(!text) return alert("Введите текст!");
+        if(!text) {
+            showError('Введите текст!');
+            return;
+        }
         
-        console.log('📝 Переводим текст...');
-        
-        document.getElementById('textResult').style.display = 'none';
+        console.log('📝 Перевод текста...');
         document.getElementById('loader').style.display = 'block';
 
         try {
             const res = await fetch('/translate_text', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({text: text})
             });
+            
             const data = await res.json();
-            console.log('✅ Текст переведен');
-            document.getElementById('textResult').innerText = data.result;
-            document.getElementById('textResult').style.display = 'block';
+            console.log('✅ Готово');
+            
+            document.getElementById('result').innerHTML = '<p>' + data.result + '</p>';
+            document.getElementById('result').style.display = 'block';
+            
         } catch(e) { 
-            console.error('❌ Ошибка:', e);
-            alert("Ошибка перевода текста"); 
+            console.error('❌', e);
+            showError('Ошибка перевода текста');
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
-    }
-
-    function copyArticle() {
-        const text = document.getElementById('articleContent').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = event.target;
-            const original = btn.innerHTML;
-            btn.innerHTML = '✓ Скопировано';
-            setTimeout(() => btn.innerHTML = original, 2000);
-        });
     }
 </script>
 
@@ -781,68 +582,66 @@ HTML_PAGE = """
 
 FEEDS = {
     "programming": [
-        {"url": "https://dev.to/feed", "type": "rss"},
-        {"url": "https://www.reddit.com/r/programming/.rss", "type": "rss"}
+        "https://www.reddit.com/r/programming/.rss",
+        "https://dev.to/feed"
     ],
     "history": [
-        {"url": "https://www.reddit.com/r/history/.rss", "type": "rss"}
+        "https://www.reddit.com/r/history/.rss"
     ],
     "gaming": [
-        {"url": "https://www.reddit.com/r/gaming/.rss", "type": "rss"}
+        "https://www.reddit.com/r/gaming/.rss"
     ],
     "movies": [
-        {"url": "https://www.reddit.com/r/movies/.rss", "type": "rss"}
+        "https://www.reddit.com/r/movies/.rss"
     ]
 }
 
 # ========== ENDPOINTS ==========
 
 @app.get("/", response_class=HTMLResponse)
-def home():
+async def home():
     return HTML_PAGE
 
 @app.get("/health")
-def health():
-    return {"status": "OK"}
+async def health():
+    return JSONResponse(
+        content={"status": "OK"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 @app.get("/feed")
-def get_feed(category: str = "programming"):
+async def get_feed(category: str = "programming"):
     print(f"\n{'='*60}")
-    print(f"📰 ЗАПРОС ЛЕНТЫ: {category}")
-    print(f"{'='*60}")
+    print(f"📰 Категория: {category}")
     
     if category not in FEEDS:
         category = "programming"
     
     articles = []
     
-    for feed_info in FEEDS[category]:
+    for feed_url in FEEDS[category]:
         try:
-            print(f"📡 Загружаю: {feed_info['url']}")
+            print(f"📡 {feed_url}")
             
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-            response = requests.get(feed_info['url'], headers=headers, timeout=10)
-            
-            print(f"✅ Статус: {response.status_code}")
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(feed_url, headers=headers, timeout=8)
             
             if response.status_code != 200:
-                print(f"❌ Ошибка загрузки")
+                print(f"❌ Статус: {response.status_code}")
                 continue
             
             soup = BeautifulSoup(response.content, 'xml')
+            entries = soup.find_all('entry')[:8] or soup.find_all('item')[:8]
             
-            entries = soup.find_all('entry')[:10]
-            if not entries:
-                entries = soup.find_all('item')[:10]
-            
-            print(f"📊 Найдено записей: {len(entries)}")
+            print(f"✅ Найдено: {len(entries)}")
             
             for entry in entries:
                 try:
                     title_tag = entry.find('title')
                     if not title_tag:
                         continue
-                    title = title_tag.get_text().strip()
+                    
+                    title = BeautifulSoup(title_tag.get_text(), 'html.parser').get_text().strip()
                     
                     link_tag = entry.find('link')
                     if link_tag:
@@ -850,173 +649,112 @@ def get_feed(category: str = "programming"):
                     else:
                         continue
                     
-                    title = BeautifulSoup(title, 'html.parser').get_text()
-                    
-                    articles.append({
-                        "title": title[:150],
-                        "original_title": title[:150],
-                        "link": link,
-                        "tag": category.upper()
-                    })
-                    
-                except Exception as e:
-                    print(f"⚠️ Ошибка парсинга записи: {e}")
+                    if title and link:
+                        articles.append({
+                            "title": title[:120],
+                            "original_title": title[:120],
+                            "link": link,
+                            "tag": category.upper()
+                        })
+                except:
                     continue
             
-            print(f"✅ Добавлено статей: {len(articles)}")
-            
         except Exception as e:
-            print(f"❌ ОШИБКА загрузки фида: {e}")
+            print(f"❌ {e}")
             continue
     
+    # Фоллбэк если ничего не загрузилось
     if len(articles) == 0:
-        print("⚠️ Добавляю тестовые статьи")
+        print("⚠️ Тестовые данные")
         articles = [
-            {
-                "title": "Тестовая статья 1 - Программирование",
-                "original_title": "Test Article 1",
-                "link": "https://dev.to/",
-                "tag": category.upper()
-            },
-            {
-                "title": "Тестовая статья 2 - Туториал",
-                "original_title": "Test Article 2",
-                "link": "https://dev.to/",
-                "tag": category.upper()
-            }
+            {"title": "Python Tutorial", "original_title": "Python Tutorial", "link": "https://dev.to/", "tag": category.upper()},
+            {"title": "Web Development", "original_title": "Web Development", "link": "https://dev.to/", "tag": category.upper()}
         ]
     
-    print(f"\n📦 ИТОГО статей: {len(articles)}")
-    print(f"{'='*60}\n")
+    print(f"📦 Итого: {len(articles)}\n")
     
-    return {
-        "articles": articles[:15],
-        "category": category,
-        "total": len(articles)
-    }
+    return JSONResponse(
+        content={"articles": articles[:12], "category": category},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 @app.post("/translate")
-def translate_article(request: LinkRequest):
+async def translate_article(request: LinkRequest):
     print(f"\n{'='*60}")
-    print(f"🔄 ПЕРЕВОД СТАТЬИ")
-    print(f"URL: {request.url}")
-    print(f"{'='*60}")
+    print(f"🔄 URL: {request.url}")
     
     try:
-        url = str(request.url)
-        
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html',
         }
         
-        print(f"📡 Загружаю страницу...")
-        
-        response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+        response = requests.get(request.url, headers=headers, timeout=12)
         
         print(f"✅ Статус: {response.status_code}")
         
         if response.status_code != 200:
-            raise HTTPException(status_code=400, detail=f"Не удалось загрузить страницу (статус {response.status_code})")
+            raise HTTPException(status_code=400, detail=f"Не удалось загрузить (статус {response.status_code})")
         
-        print(f"📄 Парсинг HTML...")
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Заголовок
         title = "Статья"
-        title_tag = soup.find('h1')
-        if title_tag:
-            title = title_tag.get_text().strip()
+        if soup.find('h1'):
+            title = soup.find('h1').get_text().strip()
         elif soup.find('title'):
             title = soup.find('title').get_text().strip()
         
-        print(f"📌 Заголовок: {title}")
-        
+        # Контент
         content = None
-        selectors = [
-            'article',
-            'main',
-            {'class': 'post-content'},
-            {'class': 'article-content'},
-            {'class': 'entry-content'},
-            {'class': 'content'},
-            {'id': 'content'},
-            'body'
-        ]
-        
-        for selector in selectors:
+        for selector in ['article', 'main', {'class': 'content'}, 'body']:
             if isinstance(selector, str):
                 content = soup.find(selector)
             else:
                 content = soup.find(**selector)
-            
             if content:
-                print(f"✅ Контент найден: {selector}")
                 break
         
         if not content:
-            print("❌ Контент не найден")
-            raise HTTPException(status_code=400, detail="Не удалось найти контент статьи")
+            raise HTTPException(status_code=400, detail="Контент не найден")
         
-        for tag in content(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe', 'noscript']):
+        # Очистка
+        for tag in content(['script', 'style', 'nav', 'header', 'footer', 'aside']):
             tag.decompose()
         
-        print(f"🧹 Очистка завершена")
-        
-        text = content.get_text()
-        words = len(text.split())
-        read_time = max(1, round(words / 200))
-        
-        print(f"📊 Слов: {words}, Время чтения: {read_time} мин")
-        
-        html_content = str(content)
-        
+        # Обработка изображений
         for img in content.find_all('img'):
             if img.get('src'):
-                img['style'] = 'max-width:100%;height:auto;border-radius:8px;margin:20px 0;'
-                img['loading'] = 'lazy'
+                img['style'] = 'max-width:100%;height:auto;border-radius:8px;'
         
-        print(f"✅ ПЕРЕВОД ЗАВЕРШЕН")
-        print(f"{'='*60}\n")
+        print(f"✅ Готово\n")
         
-        return {
-            "title": title,
-            "translated_html": html_content,
-            "read_time": read_time,
-            "word_count": words,
-            "url": url,
-            "success": True
-        }
+        return JSONResponse(
+            content={
+                "title": title,
+                "translated_html": str(content),
+                "success": True
+            },
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
         
-    except requests.Timeout:
-        print(f"❌ TIMEOUT")
-        raise HTTPException(status_code=504, detail="Время ожидания истекло")
-    
-    except requests.RequestException as e:
-        print(f"❌ REQUEST ERROR: {e}")
-        raise HTTPException(status_code=500, detail=f"Ошибка загрузки: {str(e)}")
-    
     except Exception as e:
-        print(f"❌ ОБЩАЯ ОШИБКА: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
+        print(f"❌ {e}\n")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/translate_text")
-def translate_text(request: TextRequest):
-    print(f"📝 Перевод текста (длина: {len(request.text)})")
-    return {
-        "result": request.text,
-        "success": True
-    }
+async def translate_text(request: TextRequest):
+    return JSONResponse(
+        content={"result": request.text, "success": True},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 if __name__ == "__main__":
     import uvicorn
     print("\n" + "="*60)
-    print("🚀 ЗАПУСК СЕРВЕРА")
+    print("🚀 СЕРВЕР")
     print("="*60)
-    print("📍 Откройте: http://localhost:8000")
-    print("📖 Документация: http://localhost:8000/docs")
+    print("📍 http://localhost:8000")
     print("="*60 + "\n")
     
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
