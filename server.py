@@ -1,10 +1,24 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
 import requests
 from bs4 import BeautifulSoup
 import uvicorn
 
 app = FastAPI()
+
+# RSS источники английских новостей
+RSS_FEEDS = {
+    "programming": [
+        "https://dev.to/feed",
+        "https://news.ycombinator.com/rss",
+    ],
+    "tech": [
+        "https://techcrunch.com/feed/",
+    ],
+    "science": [
+        "https://www.reddit.com/r/science/.rss",
+    ]
+}
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -13,245 +27,105 @@ def home():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News/Translate by Kanamy</title>
+    <title>News Translator</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, sans-serif;
-            background: #0a0a0a;
-            color: #e8e8e8;
-            padding: 20px;
-        }
-
+        body { font-family: -apple-system, sans-serif; background: #0a0a0a; color: #e8e8e8; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-
-        h1 {
-            text-align: center;
-            font-size: 40px;
-            font-weight: 300;
-            margin: 40px 0;
-        }
-
+        h1 { text-align: center; font-size: 36px; margin: 40px 0; }
         h1 span { color: #FF6B35; }
-
-        .input-box {
-            max-width: 600px;
-            margin: 0 auto 40px;
-            background: #1a1a1a;
-            padding: 24px;
-            border-radius: 12px;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px;
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 15px;
-            margin-bottom: 12px;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: #FF6B35;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            cursor: pointer;
-        }
-
-        button:hover { background: #ff8555; }
-
-        .tabs {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
-
-        .tab {
-            padding: 10px 24px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .tab.active {
-            background: #FF6B35;
-            border-color: #FF6B35;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: #1a1a1a;
-            padding: 24px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: #FF6B35;
-        }
-
-        .tag {
-            font-size: 10px;
-            color: #FF6B35;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .card-title {
-            font-size: 16px;
-            line-height: 1.4;
-        }
-
-        #article {
-            display: none;
-            background: #1a1a1a;
-            padding: 40px;
-            border-radius: 12px;
-            margin-top: 40px;
-        }
-
+        
+        .tabs { display: flex; gap: 12px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }
+        .tab { padding: 10px 24px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; cursor: pointer; }
+        .tab.active { background: #FF6B35; border-color: #FF6B35; }
+        
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
+        .card:hover { transform: translateY(-4px); border-color: #FF6B35; }
+        .tag { font-size: 10px; color: #FF6B35; text-transform: uppercase; margin-bottom: 8px; }
+        .title { font-size: 16px; line-height: 1.4; }
+        
+        #article { display: none; background: #1a1a1a; padding: 40px; border-radius: 12px; margin-top: 40px; }
         #article h1, #article h2 { color: #FF6B35; margin: 20px 0 10px; }
         #article p { margin: 12px 0; line-height: 1.7; }
         #article img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
-
-        .loader {
-            display: none;
-            text-align: center;
-            padding: 60px;
-            color: #888;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #333;
-            border-top-color: #FF6B35;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
+        
+        .loader { display: none; text-align: center; padding: 60px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #333; border-top-color: #FF6B35; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        .back {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
+        
+        .back { display: inline-block; padding: 10px 20px; background: #333; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
+        .status { text-align: center; padding: 40px; color: #888; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Умный <span>переводчик</span></h1>
-
-    <div class="input-box">
-        <input type="text" id="urlInput" placeholder="https://example.com/article">
-        <button onclick="translateUrl()">Перевести</button>
-    </div>
+    <h1>News <span>Translator</span></h1>
 
     <div id="news">
         <div class="tabs">
-            <div class="tab active" onclick="showCategory('programming')">Программирование</div>
-            <div class="tab" onclick="showCategory('history')">История</div>
-            <div class="tab" onclick="showCategory('gaming')">Игры</div>
-            <div class="tab" onclick="showCategory('movies')">Кино</div>
+            <div class="tab active" onclick="loadCategory('programming')">Programming</div>
+            <div class="tab" onclick="loadCategory('tech')">Tech</div>
+            <div class="tab" onclick="loadCategory('science')">Science</div>
         </div>
-        <div class="grid" id="grid"></div>
+        <div class="status" id="status">Загрузка...</div>
+        <div id="grid"></div>
     </div>
 
-    <div class="loader" id="loader">
-        <div class="spinner"></div>
-        <p>Загрузка...</p>
-    </div>
-
+    <div class="loader" id="loader"><div class="spinner"></div><p>Загрузка статьи...</p></div>
+    
     <div id="article">
         <div class="back" onclick="goBack()">← Назад</div>
-        <div id="articleContent"></div>
+        <div id="content"></div>
     </div>
 </div>
 
 <script>
-console.log('✅ Скрипт загружен');
-
-// Встроенные статьи
-const articles = {
-    programming: [
-        {title: 'Python для начинающих - полное руководство', url: 'https://realpython.com/'},
-        {title: 'FastAPI - современный веб-фреймворк', url: 'https://fastapi.tiangolo.com/'},
-        {title: 'JavaScript async/await подробно', url: 'https://developer.mozilla.org/'},
-        {title: 'React Hooks - детальный гайд', url: 'https://react.dev/'},
-        {title: 'Docker контейнеры для разработчиков', url: 'https://docs.docker.com/'},
-    ],
-    history: [
-        {title: 'Древний Рим - история империи', url: 'https://www.britannica.com/'},
-        {title: 'Египетские пирамиды - секреты строительства', url: 'https://www.nationalgeographic.com/'},
-    ],
-    gaming: [
-        {title: 'Dota 2 - обзор нового патча', url: 'https://www.dota2.com/'},
-        {title: 'Clash Royale - топ стратегии', url: 'https://clashroyale.com/'},
-    ],
-    movies: [
-        {title: 'Лучшие фильмы 2025 года', url: 'https://www.imdb.com/'},
-        {title: 'Netflix - новинки января', url: 'https://www.netflix.com/'},
-    ]
-};
-
-let currentCategory = 'programming';
-
-function showCategory(category) {
-    console.log('📰 Показываю категорию:', category);
+async function loadCategory(cat) {
+    console.log('📰 Категория:', cat);
     
-    currentCategory = category;
-    
-    // Обновляем активную вкладку
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
     
-    // Рендерим карточки
     const grid = document.getElementById('grid');
+    const status = document.getElementById('status');
+    
     grid.innerHTML = '';
+    status.style.display = 'block';
+    status.textContent = 'Загрузка статей...';
     
-    articles[category].forEach(article => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="tag">${category.toUpperCase()}</div>
-            <div class="card-title">${article.title}</div>
-        `;
-        card.onclick = () => loadArticle(article.url);
-        grid.appendChild(card);
-    });
-    
-    console.log('✅ Показано карточек:', articles[category].length);
+    try {
+        const res = await fetch('/feed?category=' + cat);
+        const data = await res.json();
+        
+        console.log('✅ Статей:', data.articles.length);
+        
+        status.style.display = 'none';
+        
+        if (data.articles.length === 0) {
+            status.textContent = 'Нет статей';
+            status.style.display = 'block';
+            return;
+        }
+        
+        data.articles.forEach(art => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div class="tag">${art.tag}</div><div class="title">${art.title}</div>`;
+            card.onclick = () => openArticle(art.url);
+            grid.appendChild(card);
+        });
+        
+    } catch (e) {
+        console.error('❌', e);
+        status.textContent = 'Ошибка загрузки';
+    }
 }
 
-async function loadArticle(url) {
-    console.log('🔄 Загружаю статью:', url);
+async function openArticle(url) {
+    console.log('🔄 Открываю:', url);
     
-    // Скрываем новости, показываем загрузку
     document.getElementById('news').style.display = 'none';
     document.getElementById('article').style.display = 'none';
     document.getElementById('loader').style.display = 'block';
@@ -260,64 +134,95 @@ async function loadArticle(url) {
         const formData = new FormData();
         formData.append('url', url);
         
-        const response = await fetch('/translate', {
-            method: 'POST',
-            body: formData
-        });
+        const res = await fetch('/translate', { method: 'POST', body: formData });
+        const html = await res.text();
         
-        console.log('📡 Ответ:', response.status);
+        console.log('✅ Загружено');
         
-        if (!response.ok) {
-            throw new Error('Ошибка загрузки');
-        }
-        
-        const html = await response.text();
-        console.log('✅ Статья загружена');
-        
-        document.getElementById('articleContent').innerHTML = html;
+        document.getElementById('content').innerHTML = html;
         document.getElementById('article').style.display = 'block';
+        window.scrollTo(0, 0);
         
-    } catch (error) {
-        console.error('❌ Ошибка:', error);
-        alert('Не удалось загрузить статью: ' + error.message);
+    } catch (e) {
+        console.error('❌', e);
+        alert('Ошибка загрузки');
         goBack();
     } finally {
         document.getElementById('loader').style.display = 'none';
     }
 }
 
-function translateUrl() {
-    const url = document.getElementById('urlInput').value.trim();
-    if (!url) {
-        alert('Введите URL!');
-        return;
-    }
-    loadArticle(url);
-}
-
 function goBack() {
     document.getElementById('article').style.display = 'none';
     document.getElementById('news').style.display = 'block';
-    showCategory(currentCategory);
 }
 
-// Инициализация
-console.log('🚀 Инициализация...');
-showCategory('programming');
-console.log('✅ Готово!');
+loadCategory('programming');
 </script>
 
 </body>
 </html>"""
 
+@app.get("/feed")
+def get_feed(category: str = "programming"):
+    print(f"\n📰 Парсинг категории: {category}")
+    
+    articles = []
+    feeds = RSS_FEEDS.get(category, RSS_FEEDS["programming"])
+    
+    for feed_url in feeds:
+        try:
+            print(f"📡 Загружаю: {feed_url}")
+            
+            response = requests.get(feed_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=8)
+            
+            if response.status_code != 200:
+                continue
+            
+            soup = BeautifulSoup(response.content, 'xml')
+            entries = soup.find_all('entry')[:10] or soup.find_all('item')[:10]
+            
+            print(f"✅ Найдено: {len(entries)} статей")
+            
+            for entry in entries:
+                try:
+                    title_tag = entry.find('title')
+                    link_tag = entry.find('link')
+                    
+                    if not title_tag or not link_tag:
+                        continue
+                    
+                    title = BeautifulSoup(title_tag.get_text(), 'html.parser').get_text().strip()
+                    link = link_tag.get('href') or link_tag.get_text().strip()
+                    
+                    if title and link:
+                        articles.append({
+                            "title": title[:100],
+                            "url": link,
+                            "tag": category.upper()
+                        })
+                except:
+                    continue
+                    
+        except Exception as e:
+            print(f"❌ Ошибка: {e}")
+            continue
+    
+    print(f"📦 Итого: {len(articles)} статей\n")
+    
+    return {"articles": articles[:15]}
+
 @app.post("/translate")
-async def translate(url: str = Form(...)):
+def translate(url: str = Form(...)):
     print(f"\n🔄 Перевод: {url}")
     
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        response = requests.get(url, headers=headers, timeout=10)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html',
+        }
         
+        response = requests.get(url, headers=headers, timeout=12)
         print(f"✅ Статус: {response.status_code}")
         
         if response.status_code != 200:
@@ -326,28 +231,48 @@ async def translate(url: str = Form(...)):
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Заголовок
-        title = "Статья"
+        title = "Article"
         if soup.find('h1'):
             title = soup.find('h1').get_text().strip()
         elif soup.find('title'):
             title = soup.find('title').get_text().strip()
         
         # Контент
-        content = soup.find('article') or soup.find('main') or soup.find('body')
+        content = None
+        for selector in ['article', 'main', '[role="main"]', '.post-content', 'body']:
+            if selector.startswith('.'):
+                content = soup.find(class_=selector[1:])
+            elif selector.startswith('['):
+                content = soup.find(attrs={'role': 'main'})
+            else:
+                content = soup.find(selector)
+            if content:
+                break
         
-        if content:
-            for tag in content(['script', 'style', 'nav', 'header', 'footer', 'aside']):
-                tag.decompose()
-            
-            for img in content.find_all('img'):
-                img['style'] = 'max-width:100%; border-radius:8px;'
-            
-            html = f"<h1>{title}</h1>{str(content)}"
-        else:
-            html = "<p>Контент не найден</p>"
+        if not content:
+            return "<p>Контент не найден</p>"
         
-        print(f"✅ Успешно\n")
-        return html
+        # Очистка
+        for tag in content(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe']):
+            tag.decompose()
+        
+        # Стили для изображений
+        for img in content.find_all('img'):
+            if img.get('src'):
+                img['style'] = 'max-width:100%; height:auto; border-radius:8px;'
+            if img.get('data-src') and not img.get('src'):
+                img['src'] = img['data-src']
+        
+        # Стили для ссылок
+        for link in content.find_all('a'):
+            link['style'] = 'color:#FF6B35;'
+            link['target'] = '_blank'
+        
+        result = f"<h1>{title}</h1>{str(content)}"
+        
+        print(f"✅ Успешно переведено\n")
+        
+        return result
         
     except Exception as e:
         print(f"❌ Ошибка: {e}\n")
@@ -355,11 +280,11 @@ async def translate(url: str = Form(...)):
 
 if __name__ == "__main__":
     print("\n" + "="*70)
-    print("🚀 СЕРВЕР ЗАПУЩЕН")
+    print("🚀 NEWS TRANSLATOR")
     print("="*70)
     print("📍 http://localhost:8000")
-    print("✅ Статьи встроены в HTML - показываются СРАЗУ!")
-    print("✅ Никаких внешних запросов для статей!")
+    print("✅ Парсит РЕАЛЬНЫЕ английские статьи из RSS")
+    print("✅ Показывает их в переведенном виде")
     print("="*70 + "\n")
     
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
