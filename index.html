@@ -18,195 +18,49 @@
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        html { scroll-behavior: smooth; }
-        
         body { 
             font-family: 'Inter', -apple-system, sans-serif; 
             background: var(--bg); 
             color: var(--text); 
             line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* ЭФФЕКТ: Анимированный градиент */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, var(--orange-dim) 0%, transparent 70%);
-            animation: pulse 15s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        /* ЭФФЕКТ: Grain/Noise */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            opacity: 0.03;
-            z-index: 1;
-            pointer-events: none;
-            animation: grain 8s steps(10) infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-            50% { transform: translate(10%, 10%) scale(1.1); opacity: 0.5; }
-        }
-        
-        @keyframes grain {
-            0%, 100% { transform: translate(0, 0); }
-            10% { transform: translate(-5%, -10%); }
-            30% { transform: translate(3%, -15%); }
-            50% { transform: translate(12%, 9%); }
-            70% { transform: translate(9%, 4%); }
-            90% { transform: translate(-1%, 7%); }
-        }
-
-        /* ЭФФЕКТ: Canvas для частиц */
-        #particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        /* ЭФФЕКТ: Cursor trail */
-        .cursor-trail {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--orange);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: trailFade 1s ease-out forwards;
-            z-index: 9999;
-        }
-        
-        @keyframes trailFade {
-            to {
-                transform: scale(3);
-                opacity: 0;
-            }
-        }
-
-        /* ЭФФЕКТ: Blob морфинг */
-        .blob {
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            top: 5%;
-            right: -150px;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.6;
         }
 
         header { 
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(10, 10, 10, 0.9);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
             padding: 20px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         
         .logo { 
             font-size: 20px; 
             font-weight: 300;
-            letter-spacing: -0.5px;
             cursor: pointer;
-            position: relative;
-            z-index: 1;
+            text-align: center;
         }
         .logo span { color: var(--orange); font-weight: 600; }
-
-        .theme-toggle {
-            width: 40px;
-            height: 40px;
-            border: 1px solid var(--border);
-            background: transparent;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        .theme-toggle::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--orange);
-            transform: scale(0);
-            transition: transform 0.3s;
-            border-radius: 50%;
-            z-index: -1;
-        }
-        .theme-toggle:hover::before { transform: scale(1); }
-        .theme-toggle:hover { border-color: var(--orange); transform: rotate(15deg); }
 
         .container { 
             max-width: 1100px; 
             margin: 0 auto; 
             padding: 60px 20px;
-            position: relative;
-            z-index: 1;
         }
 
         .hero { 
             text-align: center; 
-            margin-bottom: 80px;
-            position: relative;
-        }
-        
-        /* ЭФФЕКТ: Геометрические фигуры */
-        .hero::before {
-            content: '';
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            border: 2px solid rgba(255, 107, 53, 0.1);
-            border-radius: 50%;
-            top: -100px;
-            right: -100px;
-            animation: rotate 30s linear infinite;
-            z-index: -1;
-        }
-        
-        @keyframes rotate {
-            100% { transform: rotate(360deg); }
+            margin-bottom: 60px;
         }
         
         .hero h1 { 
             font-size: 48px; 
             font-weight: 300;
-            margin-bottom: 40px;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, var(--text) 0%, var(--orange) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            min-height: 60px;
+            margin-bottom: 30px;
+            color: var(--text);
         }
+        .hero h1 span { color: var(--orange); }
 
         .tabs { 
             display: inline-flex;
@@ -214,17 +68,16 @@
             background: var(--surface);
             padding: 4px;
             border-radius: 50px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             border: 1px solid var(--border);
         }
         
         .tab-btn { 
-            padding: 10px 28px;
+            padding: 10px 24px;
             border: none;
             background: transparent;
             color: var(--text-dim);
             cursor: pointer;
-            font-weight: 500;
             font-size: 14px;
             border-radius: 50px;
             transition: all 0.3s;
@@ -232,87 +85,45 @@
         .tab-btn.active { 
             background: var(--orange);
             color: #fff;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
         }
 
-        .input-area { display: none; max-width: 600px; margin: 0 auto; }
+        .input-area { 
+            display: none; 
+            max-width: 600px; 
+            margin: 0 auto; 
+        }
         .input-area.active { display: block; }
 
         input, textarea { 
             width: 100%;
-            padding: 16px 20px;
+            padding: 16px;
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 15px;
             background: var(--surface);
             color: var(--text);
             font-family: inherit;
-            transition: all 0.3s;
         }
         input:focus, textarea:focus { 
             border-color: var(--orange);
             outline: none;
-            box-shadow: 0 0 0 3px var(--orange-dim);
         }
-        textarea { resize: vertical; min-height: 120px; }
+        textarea { min-height: 100px; }
 
         .btn-main { 
-            margin-top: 16px;
-            padding: 14px 32px;
+            margin-top: 12px;
+            padding: 12px 24px;
             background: var(--orange);
             color: #fff;
             border: none;
             border-radius: 8px;
-            font-weight: 500;
             cursor: pointer;
             font-size: 15px;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
+            width: 100%;
+            transition: 0.3s;
         }
-        .btn-main::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        .btn-main:hover::before { width: 300px; height: 300px; }
         .btn-main:hover { 
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
-        }
-
-        .history-box { margin-top: 30px; display: none; }
-        .history-title { 
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-        }
-        .history-item { 
-            background: var(--surface);
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
-        .history-item:hover { 
-            border-color: var(--orange);
-            transform: translateX(4px);
         }
 
         .categories { 
@@ -324,29 +135,14 @@
         }
         
         .cat-btn { 
-            padding: 10px 24px;
+            padding: 10px 20px;
             border: 1px solid var(--border);
             background: transparent;
             color: var(--text-dim);
-            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
             border-radius: 8px;
-            font-size: 14px;
-            position: relative;
+            transition: 0.3s;
         }
-        .cat-btn::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: var(--orange);
-            transition: all 0.3s;
-            transform: translateX(-50%);
-        }
-        .cat-btn:hover::after { width: 80%; }
         .cat-btn.active { 
             background: var(--orange);
             color: #fff;
@@ -355,136 +151,57 @@
 
         .news-grid { 
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
         }
         
         .news-card { 
             background: var(--surface);
-            padding: 24px;
+            padding: 20px;
             border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
+            transition: 0.3s;
         }
-        .news-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--orange);
-            transform: scaleX(0);
-            transition: transform 0.3s;
-        }
-        
-        /* ЭФФЕКТ: Glow на карточках */
-        .news-card::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(45deg, transparent, var(--orange), transparent);
-            background-size: 200% 200%;
-            border-radius: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: -1;
-            animation: cardGlow 3s linear infinite;
-        }
-        
-        @keyframes cardGlow {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-        
-        .news-card:hover::before { transform: scaleX(1); }
-        .news-card:hover::after { opacity: 0.2; }
         .news-card:hover { 
             transform: translateY(-4px);
             border-color: var(--orange);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
         }
         
         .tag-badge { 
             font-size: 10px;
-            font-weight: 600;
             color: var(--orange);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            display: inline-block;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
         
         .news-title { 
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 500;
-            line-height: 1.5;
-            margin-bottom: 12px;
-        }
-
-        .article-controls { 
-            display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        
-        .control-btn { 
-            padding: 8px 16px;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-        .control-btn:hover { 
-            border-color: var(--orange);
-            background: var(--orange-dim);
-        }
-        
-        .read-time { 
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-left: auto;
+            line-height: 1.4;
         }
 
         .article-view { 
             background: var(--surface);
-            padding: 50px;
-            border-radius: 16px;
+            padding: 40px;
+            border-radius: 12px;
             margin-top: 40px;
             display: none;
-            line-height: 1.8;
-            font-size: 17px;
             border: 1px solid var(--border);
         }
-        .article-view img { 
-            max-width: 100%;
-            border-radius: 12px;
-            margin: 30px 0;
+        .article-view h1, .article-view h2 {
+            color: var(--orange);
+            margin: 20px 0 10px 0;
         }
-        
-        .text-result { 
-            background: var(--surface);
-            padding: 30px;
-            border-radius: 12px;
-            margin-top: 30px;
-            display: none;
-            border-left: 3px solid var(--orange);
-            font-size: 17px;
-            line-height: 1.8;
+        .article-view p {
+            margin: 10px 0;
+            line-height: 1.7;
+        }
+        .article-view img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 20px 0;
         }
 
         .loader { 
@@ -492,90 +209,47 @@
             margin: 40px auto;
             width: 40px;
             height: 40px;
-            position: relative;
-        }
-        .loader::before, .loader::after {
-            content: '';
-            position: absolute;
-            border: 2px solid var(--orange);
+            border: 3px solid var(--border);
+            border-top-color: var(--orange);
             border-radius: 50%;
-            animation: ripple 1.5s infinite;
+            animation: spin 1s linear infinite;
         }
-        .loader::before { width: 40px; height: 40px; }
-        .loader::after { width: 40px; height: 40px; animation-delay: 0.75s; }
-        @keyframes ripple {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .fact-box { 
-            margin-top: 30px;
-            padding: 16px 24px;
-            background: var(--orange-dim);
-            border-radius: 8px;
-            font-size: 13px;
+        .status {
+            text-align: center;
+            padding: 20px;
             color: var(--text-dim);
-            border-left: 3px solid var(--orange);
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            font-size: 14px;
         }
 
-        .reading-progress {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--orange) 0%, #ff8c61 100%);
-            z-index: 1000;
-            width: 0%;
-            transition: width 0.1s;
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--orange);
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            border: none;
         }
 
         @media (max-width: 768px) {
             .hero h1 { font-size: 32px; }
-            .article-view { padding: 24px; font-size: 16px; }
-            .container { padding: 40px 16px; }
+            .article-view { padding: 20px; }
             .news-grid { grid-template-columns: 1fr; }
-            .blob { display: none; }
         }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { 
-            background: var(--border);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
     </style>
 </head>
 <body>
 
-<!-- ЭФФЕКТ: Прогресс бар -->
-<div class="reading-progress" id="readingProgress"></div>
-
-<!-- ЭФФЕКТ: Canvas для частиц -->
-<canvas id="particles"></canvas>
-
-<!-- ЭФФЕКТ: Blob морфинг -->
-<svg class="blob" viewBox="0 0 200 200">
-    <path fill="#FF6B35" fill-opacity="0.15">
-        <animate attributeName="d" dur="10s" repeatCount="indefinite"
-            values="
-                M45,-50C60,-40,75,-25,80,-5C85,15,80,35,65,45C50,55,30,60,10,55C-10,50,-30,35,-40,15C-50,-5,-45,-25,-30,-40C-15,-55,0,-60,20,-55C35,-50,45,-50,45,-50;
-                M50,-55C65,-45,75,-30,78,-10C80,10,72,30,58,42C44,54,25,58,5,56C-15,54,-35,45,-48,28C-60,10,-65,-10,-58,-28C-50,-45,-35,-55,-15,-58C5,-60,25,-58,40,-52C50,-55,50,-55,50,-55;
-                M45,-50C60,-40,75,-25,80,-5C85,15,80,35,65,45C50,55,30,60,10,55C-10,50,-30,35,-40,15C-50,-5,-45,-25,-30,-40C-15,-55,0,-60,20,-55C35,-50,45,-50,45,-50"/>
-    </path>
-</svg>
-
 <header>
     <div class="logo" onclick="goHome()">News/Translate <span>by Kanamy</span></div>
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 </header>
 
 <div class="container">
     <div class="hero">
-        <h1 id="mainTitle"></h1>
+        <h1>Умный <span>переводчик</span></h1>
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchMode('url')">🔗 Ссылка</button>
@@ -583,21 +257,14 @@
         </div>
 
         <div id="urlMode" class="input-area active">
-            <input type="text" id="urlInput" placeholder="Вставьте ссылку на статью..." />
-            <button class="btn-main" onclick="translateUrl()">Перевести</button>
-            
-            <div id="historyBox" class="history-box">
-                <div class="history-title">Недавно просмотрено</div>
-                <div id="historyList"></div>
-            </div>
+            <input type="text" id="urlInput" placeholder="https://example.com/article" />
+            <button class="btn-main" onclick="translateUrl()">Перевести статью</button>
         </div>
 
         <div id="textMode" class="input-area">
-            <textarea id="textInput" placeholder="Вставьте текст для перевода..."></textarea>
-            <button class="btn-main" onclick="translateText()">Перевести</button>
+            <textarea id="textInput" placeholder="Введите текст для перевода..."></textarea>
+            <button class="btn-main" onclick="translateText()">Перевести текст</button>
         </div>
-        
-        <div class="fact-box" id="factBox">💡 Загрузка...</div>
     </div>
 
     <div id="newsSection">
@@ -607,344 +274,171 @@
             <button class="cat-btn" onclick="loadCategory('gaming', this)">Игры</button>
             <button class="cat-btn" onclick="loadCategory('movies', this)">Кино</button>
         </div>
+        <div class="status" id="status">Загрузка...</div>
         <div class="news-grid" id="newsGrid"></div>
     </div>
 
     <div class="loader" id="loader"></div>
-    
-    <div id="result" class="article-view">
-        <div class="article-controls">
-            <button class="control-btn" onclick="speakText()" title="Озвучить статью">🔊 Слушать</button>
-            <button class="control-btn" onclick="stopSpeak()" title="Остановить">⏹ Стоп</button>
-            <button class="control-btn" onclick="copyArticle()" title="Копировать текст">📋 Копировать</button>
-            <span class="read-time" id="readTime">⏱ 5 мин</span>
-        </div>
-        <div id="articleContent"></div>
-    </div>
-
-    <div id="textResult" class="text-result"></div>
+    <div id="result" class="article-view"></div>
 </div>
 
 <script>
-    const API = 'http://localhost:8000'; // Замените на ваш URL
-    const facts = [
-        "Первый компьютерный баг был настоящим жуком в реле",
-        "Python назван в честь комедийного шоу Монти Пайтон",
-        "Символ @ использовался торговцами в средние века",
-        "Первый веб-сайт появился 6 августа 1991 года",
-        "В мире существует более 700 языков программирования"
-    ];
-    let isSpeaking = false;
+console.log('🚀 App started');
 
-    // ========== ЭФФЕКТ: Прогресс бар скролла ==========
-    window.addEventListener('scroll', () => {
-        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (winScroll / height) * 100;
-        document.getElementById('readingProgress').style.width = scrolled + '%';
-    });
+window.onload = function() {
+    loadCategory('programming', document.querySelector('.cat-btn.active'));
+};
 
-    // ========== ЭФФЕКТ: Particles canvas ==========
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+function goHome() {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('newsSection').style.display = 'block';
+    document.getElementById('loader').style.display = 'none';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
 
-    let particles = [];
-
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speedX = Math.random() * 0.5 - 0.25;
-            this.speedY = Math.random() * 0.5 - 0.25;
-            this.color = Math.random() > 0.7 ? '#FF6B35' : '#333';
-        }
-        
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            
-            if(this.x > canvas.width) this.x = 0;
-            if(this.x < 0) this.x = canvas.width;
-            if(this.y > canvas.height) this.y = 0;
-            if(this.y < 0) this.y = canvas.height;
-        }
-        
-        draw() {
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    function initParticles() {
-        for(let i = 0; i < 80; i++) {
-            particles.push(new Particle());
-        }
-    }
-
-    function animateParticles() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
-        requestAnimationFrame(animateParticles);
-    }
-
-    initParticles();
-    animateParticles();
-
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
-
-    // ========== ЭФФЕКТ: Cursor trail ==========
-    let lastTrailTime = 0;
-    document.addEventListener('mousemove', (e) => {
-        const now = Date.now();
-        if(now - lastTrailTime < 50) return; // Throttle
-        lastTrailTime = now;
-        
-        const trail = document.createElement('div');
-        trail.className = 'cursor-trail';
-        trail.style.left = e.pageX + 'px';
-        trail.style.top = e.pageY + 'px';
-        document.body.appendChild(trail);
-        
-        setTimeout(() => trail.remove(), 1000);
-    });
-
-    // ========== ЭФФЕКТ: Typing эффект ==========
-    const titleElement = document.getElementById('mainTitle');
-    const titleText = 'Умный переводчик';
-    let titleIndex = 0;
-
-    function typeWriter() {
-        if(titleIndex < titleText.length) {
-            titleElement.textContent += titleText.charAt(titleIndex);
-            titleIndex++;
-            setTimeout(typeWriter, 100);
-        }
-    }
-
-    // ========== ЭФФЕКТ: Parallax для hero ==========
-    window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset;
-        const hero = document.querySelector('.hero');
-        if(hero) {
-            hero.style.transform = `translateY(${scrolled * 0.3}px)`;
-        }
-    });
-
-    // ========== Основная логика ==========
-    window.onload = function() {
-        setTimeout(typeWriter, 300);
-        document.getElementById('factBox').innerText = "💡 " + facts[Math.floor(Math.random() * facts.length)];
-        loadCategory('programming', document.querySelector('.cat-btn.active'));
-        renderHistory();
-    };
-
-    function resetView() {
-        document.getElementById('result').style.display = 'none';
-        document.getElementById('textResult').style.display = 'none';
-        document.getElementById('loader').style.display = 'none';
-        document.querySelector('.hero').style.display = 'block';
-        stopSpeak();
-    }
-
-    function goHome() {
-        resetView();
+function switchMode(mode) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.input-area').forEach(a => a.classList.remove('active'));
+    
+    if(mode === 'url') {
+        document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+        document.getElementById('urlMode').classList.add('active');
         document.getElementById('newsSection').style.display = 'block';
-        document.getElementById('newsGrid').style.display = 'grid';
-        switchMode('url');
-        window.scrollTo({top: 0, behavior: 'smooth'});
+    } else {
+        document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+        document.getElementById('textMode').classList.add('active');
+        document.getElementById('newsSection').style.display = 'none';
     }
+    document.getElementById('result').style.display = 'none';
+}
 
-    function switchMode(mode) {
-        resetView();
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.input-area').forEach(a => a.classList.remove('active'));
+async function loadCategory(cat, btn) {
+    console.log('📰 Category:', cat);
+    
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    
+    const grid = document.getElementById('newsGrid');
+    const status = document.getElementById('status');
+    
+    grid.innerHTML = '';
+    status.textContent = 'Загружаю статьи...';
+    status.style.display = 'block';
+
+    try {
+        const res = await fetch('/feed?category=' + cat);
         
-        if(mode === 'url') {
-            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
-            document.getElementById('urlMode').classList.add('active');
-            document.getElementById('newsSection').style.display = 'block';
-        } else {
-            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
-            document.getElementById('textMode').classList.add('active');
-            document.getElementById('newsSection').style.display = 'none';
+        console.log('📡 Response:', res.status);
+        
+        if(!res.ok) {
+            throw new Error('Ошибка: ' + res.status);
         }
-    }
-
-    function toggleTheme() {
-        const btn = document.querySelector('.theme-toggle');
-        btn.style.transform = 'rotate(360deg)';
-        setTimeout(() => btn.style.transform = 'rotate(0deg)', 300);
-    }
-
-    function saveToHistory(url) {
-        let history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
-        history = history.filter(item => item !== url);
-        history.unshift(url);
-        if(history.length > 3) history.pop();
-        localStorage.setItem('kanamyHistory', JSON.stringify(history));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('historyList');
-        const box = document.getElementById('historyBox');
-        const history = JSON.parse(localStorage.getItem('kanamyHistory') || '[]');
         
-        if(history.length === 0) {
-            box.style.display = 'none';
+        const data = await res.json();
+        console.log('✅ Data:', data);
+        
+        status.style.display = 'none';
+        
+        if(!data.articles || data.articles.length === 0) {
+            status.textContent = 'Нет статей';
+            status.style.display = 'block';
             return;
         }
-        
-        box.style.display = 'block';
-        list.innerHTML = "";
-        history.forEach(url => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            const shortUrl = url.length > 50 ? url.substring(0, 50) + '...' : url;
-            item.innerHTML = `<span style="opacity:0.5">🕒</span>${shortUrl}`;
-            item.onclick = () => translateUrl(url);
-            list.appendChild(item);
+
+        data.articles.forEach(art => {
+            const card = document.createElement('div');
+            card.className = 'news-card';
+            card.innerHTML = `
+                <div class="tag-badge">${art.tag}</div>
+                <div class="news-title">${art.title}</div>
+            `;
+            card.onclick = () => translateUrl(art.link);
+            grid.appendChild(card);
         });
-    }
-
-    async function loadCategory(cat, btn) {
-        resetView();
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        if(btn) btn.classList.add('active');
         
-        const grid = document.getElementById('newsGrid');
-        grid.innerHTML = "";
-        document.getElementById('loader').style.display = 'block';
+        console.log('✅ Cards rendered:', data.articles.length);
+        
+    } catch(e) { 
+        console.error('❌ Error:', e);
+        status.textContent = 'Ошибка загрузки: ' + e.message;
+        status.style.color = '#ff6b6b';
+    }
+}
 
-        try {
-            const res = await fetch(`${API}/feed?category=${cat}`);
-            const data = await res.json();
-            document.getElementById('loader').style.display = 'none';
-            
-            if(!data.articles || data.articles.length === 0) {
-                grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: var(--text-dim);'>Новостей пока нет</p>";
-                return;
-            }
+async function translateUrl(url = null) {
+    const inputUrl = url || document.getElementById('urlInput').value.trim();
+    
+    if(!inputUrl) {
+        alert('Введите ссылку!');
+        return;
+    }
+    
+    console.log('🔄 Translating:', inputUrl);
+    
+    document.getElementById('newsSection').style.display = 'none';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('loader').style.display = 'block';
 
-            data.articles.forEach(art => {
-                const card = document.createElement('div');
-                card.className = 'news-card';
-                card.innerHTML = `
-                    <div class="tag-badge">${art.tag}</div>
-                    <div class="news-title">${art.title}</div>
-                    <div style="font-size:12px; color: var(--text-dim); margin-top: 8px;">${art.original_title}</div>
-                `;
-                card.onclick = () => translateUrl(art.link);
-                grid.appendChild(card);
-            });
-        } catch(e) { 
-            document.getElementById('loader').style.display = 'none';
+    try {
+        const res = await fetch('/translate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({url: inputUrl})
+        });
+        
+        console.log('📡 Status:', res.status);
+        
+        if(!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Ошибка сервера');
         }
-    }
-
-    async function translateUrl(url = null) {
-        const inputUrl = url || document.getElementById('urlInput').value;
-        if(!inputUrl) return alert("Введите ссылку!");
         
-        saveToHistory(inputUrl);
+        const data = await res.json();
+        console.log('✅ Translated');
         
-        document.getElementById('newsSection').style.display = 'none';
-        document.getElementById('result').style.display = 'none';
-        document.getElementById('loader').style.display = 'block';
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '<button class="back-btn" onclick="goHome()">← Назад</button>' + data.translated_html;
+        resultDiv.style.display = 'block';
+        
         window.scrollTo({top: 0, behavior: 'smooth'});
-
-        try {
-            const res = await fetch(API + '/translate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url: inputUrl})
-            });
-            const data = await res.json();
-            
-            document.getElementById('articleContent').innerHTML = data.translated_html;
-            document.getElementById('readTime').innerHTML = `⏱ ${data.read_time} мин`;
-            document.getElementById('result').style.display = 'block';
-        } catch(e) {
-            alert("Ошибка перевода");
-            goHome();
-        } finally {
-            document.getElementById('loader').style.display = 'none';
-        }
-    }
-
-    async function translateText() {
-        const text = document.getElementById('textInput').value;
-        if(!text) return alert("Введите текст!");
         
-        document.getElementById('textResult').style.display = 'none';
-        document.getElementById('loader').style.display = 'block';
-
-        try {
-            const res = await fetch(API + '/translate_text', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: text})
-            });
-            const data = await res.json();
-            document.getElementById('textResult').innerText = data.result;
-            document.getElementById('textResult').style.display = 'block';
-        } catch(e) { alert("Ошибка"); } 
-        finally { document.getElementById('loader').style.display = 'none'; }
+    } catch(e) {
+        console.error('❌', e);
+        alert('Ошибка: ' + e.message);
+        goHome();
+    } finally {
+        document.getElementById('loader').style.display = 'none';
     }
+}
 
-    async function speakText() {
-        if(isSpeaking) return;
-        const text = document.getElementById('articleContent').innerText;
-        if(!text) return;
-
-        try {
-            const res = await fetch(API + '/text_to_speech', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: text.substring(0, 5000), voice: 'ru', speed: 1.0})
-            });
-            
-            const audioBlob = await res.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            audio.play();
-            isSpeaking = true;
-            audio.onended = () => { isSpeaking = false; };
-        } catch(e) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ru-RU';
-            utterance.rate = 1.0;
-            utterance.onend = () => { isSpeaking = false; };
-            window.speechSynthesis.speak(utterance);
-            isSpeaking = true;
-        }
+async function translateText() {
+    const text = document.getElementById('textInput').value.trim();
+    
+    if(!text) {
+        alert('Введите текст!');
+        return;
     }
+    
+    document.getElementById('loader').style.display = 'block';
 
-    function stopSpeak() {
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
-    }
-
-    function copyArticle() {
-        const text = document.getElementById('articleContent').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = event.target;
-            const original = btn.innerHTML;
-            btn.innerHTML = '✓ Скопировано';
-            setTimeout(() => btn.innerHTML = original, 2000);
+    try {
+        const res = await fetch('/translate_text', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: text})
         });
+        
+        const data = await res.json();
+        
+        document.getElementById('result').innerHTML = '<button class="back-btn" onclick="goHome()">← Назад</button><p>' + data.result + '</p>';
+        document.getElementById('result').style.display = 'block';
+        
+    } catch(e) { 
+        alert('Ошибка перевода');
+    } finally { 
+        document.getElementById('loader').style.display = 'none'; 
     }
+}
 </script>
 
 </body>
