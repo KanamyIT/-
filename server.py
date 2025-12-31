@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
@@ -11,7 +11,7 @@ import uvicorn
 
 app = FastAPI()
 
-# ✅ ВАЖНО: CORS middleware
+# CORS middleware - ОБЯЗАТЕЛЬНО!
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,6 +22,9 @@ app.add_middleware(
 
 class LinkRequest(BaseModel):
     url: str
+
+class TextRequest(BaseModel):
+    text: str
 
 # RSS источники
 RSS_SOURCES = {
@@ -42,9 +45,10 @@ RSS_SOURCES = {
 }
 
 def translate_html_content(soup):
-    """Переводит HTML контент"""
+    """Переводит HTML контент на русский"""
     translator = GoogleTranslator(source='auto', target='ru')
     
+    # Ищем контент
     content = None
     for selector in ['article', 'main', '.content', '.post-content', 'body']:
         if selector.startswith('.'):
@@ -86,7 +90,9 @@ def translate_html_content(soup):
     
     # Стили для изображений
     for img in content.find_all('img'):
-        img['style'] = "max-width: 100%; height: auto;"
+        img['style'] = "max-width: 100%; height: auto; border-radius: 8px;"
+        if img.get('data-src') and not img.get('src'):
+            img['src'] = img['data-src']
     
     return str(content), word_count
 
@@ -140,87 +146,76 @@ def fetch_feed_category(category):
     
     return all_articles
 
+# Читаем HTML файл
 @app.get("/", response_class=HTMLResponse)
 def home():
-    # Твой оригинальный HTML (из скрина)
-    return """<!DOCTYPE html>
+    try:
+        with open('index.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        # Если файла нет, отдаём встроенный HTML
+        return HTMLResponse(content="""
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News/Translate by Kanamy</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #0a0a0a;
-            --surface: #1a1a1a;
-            --orange: #FF6B35;
-            --text: #e8e8e8;
-        }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 36px; margin: 40px 0; }
+        h1 span { color: #FF6B35; }
         
-        header { background: rgba(10,10,10,0.95); padding: 20px; text-align: center; }
-        .logo { font-size: 20px; }
-        .logo span { color: var(--orange); }
+        .tabs { display: flex; gap: 10px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
+        .tab { padding: 12px 24px; background: #1a1a1a; border: 1px solid #333; color: #fff; cursor: pointer; border-radius: 8px; }
+        .tab.active { background: #FF6B35; }
         
-        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-        h1 { text-align: center; font-size: 48px; margin: 40px 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 40px 0; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; cursor: pointer; border: 2px solid #333; }
+        .card:hover { border-color: #FF6B35; transform: translateY(-4px); }
+        .card-title { font-size: 18px; line-height: 1.4; }
         
-        .tabs { display: flex; gap: 10px; justify-content: center; margin: 30px 0; }
-        .tab { padding: 12px 24px; background: var(--surface); border: 1px solid #333; color: #fff; cursor: pointer; border-radius: 8px; }
-        .tab.active { background: var(--orange); }
+        #article { display: none; background: #1a1a1a; padding: 40px; border-radius: 12px; margin: 40px 0; }
+        #article h1, #article h2 { color: #FF6B35; margin: 20px 0; }
+        #article p { line-height: 1.7; margin: 15px 0; }
+        #article img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: var(--surface); padding: 20px; border-radius: 12px; cursor: pointer; border: 1px solid #333; }
-        .card:hover { border-color: var(--orange); transform: translateY(-4px); }
-        .tag { font-size: 10px; color: var(--orange); margin-bottom: 8px; }
-        
-        #article { display: none; background: var(--surface); padding: 40px; border-radius: 12px; margin: 40px 0; }
-        #article h1, #article h2 { color: var(--orange); }
-        #article img { max-width: 100%; }
-        
+        .back { display: inline-block; padding: 12px 24px; background: #FF6B35; color: #fff; cursor: pointer; border-radius: 8px; margin-bottom: 20px; }
         .loader { display: none; text-align: center; padding: 60px; }
-        .spinner { width: 50px; height: 50px; border: 3px solid #333; border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+        .spinner { width: 50px; height: 50px; border: 4px solid #333; border-top-color: #FF6B35; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .back { display: inline-block; padding: 10px 20px; background: var(--orange); color: #fff; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
-        .status { text-align: center; padding: 20px; color: #888; }
+        .status { text-align: center; padding: 40px; color: #888; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="logo">News/Translate <span>by Kanamy</span></div>
-</header>
-
 <div class="container">
-    <h1>Умный переводчик</h1>
+    <h1>News <span>Translator</span></h1>
     
     <div id="news">
         <div class="tabs">
-            <button class="tab active" onclick="load('programming')">Программирование</button>
-            <button class="tab" onclick="load('history')">История</button>
-            <button class="tab" onclick="load('gaming')">Игры</button>
-            <button class="tab" onclick="load('movies')">Кино</button>
+            <button class="tab active" onclick="loadCat('programming')">Программирование</button>
+            <button class="tab" onclick="loadCat('history')">История</button>
+            <button class="tab" onclick="loadCat('gaming')">Игры</button>
+            <button class="tab" onclick="loadCat('movies')">Кино</button>
         </div>
-        <div class="status" id="status">Загрузка статей...</div>
+        <div class="status" id="status">Загрузка...</div>
         <div class="grid" id="grid"></div>
     </div>
     
-    <div class="loader" id="loader"><div class="spinner"></div></div>
+    <div class="loader" id="loader"><div class="spinner"></div><p>Загрузка статьи...</p></div>
     
     <div id="article">
-        <div class="back" onclick="back()">← Назад</div>
+        <div class="back" onclick="goBack()">← Назад</div>
         <div id="content"></div>
     </div>
 </div>
 
 <script>
-console.log('🚀 Start');
+console.log('🚀 App started');
 
-async function load(cat) {
+async function loadCat(cat) {
     console.log('📰 Category:', cat);
     
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -231,6 +226,7 @@ async function load(cat) {
     
     grid.innerHTML = '';
     status.style.display = 'block';
+    status.textContent = 'Загрузка статей...';
     
     try {
         const res = await fetch('/feed?category=' + cat);
@@ -240,21 +236,27 @@ async function load(cat) {
         
         status.style.display = 'none';
         
+        if (data.articles.length === 0) {
+            status.textContent = 'Нет статей';
+            status.style.display = 'block';
+            return;
+        }
+        
         data.articles.forEach(art => {
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = '<div class="tag">' + art.tag + '</div><div>' + art.title + '</div>';
-            card.onclick = () => open(art.link);
+            card.innerHTML = '<div class="card-title">' + art.title + '</div>';
+            card.onclick = () => openArticle(art.link);
             grid.appendChild(card);
         });
     } catch(e) {
-        console.error('❌', e);
+        console.error('❌ Error:', e);
         status.textContent = 'Ошибка: ' + e.message;
     }
 }
 
-async function open(url) {
-    console.log('🔄 Opening:', url);
+async function openArticle(url) {
+    console.log('🔄 Loading:', url);
     
     document.getElementById('news').style.display = 'none';
     document.getElementById('article').style.display = 'none';
@@ -269,35 +271,39 @@ async function open(url) {
         
         const data = await res.json();
         
-        if(data.error) throw new Error(data.error);
+        if (data.error) throw new Error(data.error);
         
-        console.log('✅ Loaded');
+        console.log('✅ Article loaded');
         
         document.getElementById('content').innerHTML = data.translated_html;
         document.getElementById('article').style.display = 'block';
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
+        
     } catch(e) {
+        console.error('❌ Error:', e);
         alert('Ошибка: ' + e.message);
-        back();
+        goBack();
     } finally {
         document.getElementById('loader').style.display = 'none';
     }
 }
 
-function back() {
+function goBack() {
     document.getElementById('article').style.display = 'none';
     document.getElementById('news').style.display = 'block';
 }
 
-load('programming');
+loadCat('programming');
 </script>
 
 </body>
-</html>"""
+</html>
+""")
 
 @app.get("/feed")
 def get_feed(category: str = "programming"):
-    print(f"\n📰 Feed: {category}")
+    """API endpoint для получения списка статей"""
+    print(f"\n📰 Feed request: {category}")
     
     if category not in RSS_SOURCES:
         category = "programming"
@@ -305,39 +311,61 @@ def get_feed(category: str = "programming"):
     articles = fetch_feed_category(category)
     random.shuffle(articles)
     
-    print(f"📦 Returning: {len(articles)}\n")
+    print(f"📦 Returning: {len(articles)} articles\n")
     
-    return {"articles": articles[:12]}
+    return JSONResponse({"articles": articles[:12]})
 
 @app.post("/translate")
 def translate_article(request: LinkRequest):
-    print(f"\n🔄 Translate: {request.url}")
+    """API endpoint для перевода статьи"""
+    print(f"\n🔄 Translate request: {request.url}")
     
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0'}
-        response = requests.get(request.url, headers=headers, timeout=20)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
+        }
         
+        response = requests.get(request.url, headers=headers, timeout=20)
         print(f"✅ Status: {response.status_code}")
+        
+        if response.status_code != 200:
+            return JSONResponse({"error": f"HTTP {response.status_code}"}, status_code=400)
         
         try:
             soup = BeautifulSoup(response.text, 'lxml')
         except:
             soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Переводим контент
         final_html, word_count = translate_html_content(soup)
         
         print(f"✅ Translated! Words: {word_count}\n")
         
-        return {
+        return JSONResponse({
             "translated_html": final_html,
             "word_count": word_count
-        }
+        })
+        
     except Exception as e:
         print(f"❌ Error: {e}\n")
-        return {"error": str(e)}
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.post("/translate_text")
+def translate_text(request: TextRequest):
+    """API endpoint для перевода текста"""
+    try:
+        translator = GoogleTranslator(source='auto', target='ru')
+        translated = translator.translate(request.text[:4500])
+        return JSONResponse({"result": translated})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
-    print("\n🚀 NEWS TRANSLATOR")
-    print("📍 http://localhost:8000\n")
+    print("\n" + "="*70)
+    print("🚀 NEWS TRANSLATOR WITH REAL TRANSLATION")
+    print("="*70)
+    print("📍 http://localhost:8000")
+    print("✅ Парсит RSS, переводит заголовки и статьи")
+    print("="*70 + "\n")
     
     uvicorn.run(app, host="0.0.0.0", port=8000)
