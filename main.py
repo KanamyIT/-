@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 TextFlow - AI Text Humanizer & Web Parser API
 Бэкенд на FastAPI для парсинга и очеловечивания текстов
@@ -7,6 +8,7 @@ TextFlow - AI Text Humanizer & Web Parser API
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
@@ -15,6 +17,7 @@ from typing import Optional
 import nltk
 from nltk.tokenize import sent_tokenize
 import random
+import os
 
 # Загружаем нужные NLTK данные
 try:
@@ -23,6 +26,7 @@ except LookupError:
     nltk.download('punkt')
 
 # ========== ИНИЦИАЛИЗАЦИЯ FASTAPI ==========
+
 app = FastAPI(
     title="TextFlow API",
     description="AI Text Humanizer & Web Parser",
@@ -39,6 +43,7 @@ app.add_middleware(
 )
 
 # ========== МОДЕЛИ ДАННЫХ ==========
+
 class HumanizeRequest(BaseModel):
     text: str
     quality_level: int = 5
@@ -73,6 +78,7 @@ class ParserResponse(BaseModel):
     title: Optional[str] = None
 
 # ========== СЛОВАРИ ДЛЯ ОЧЕЛОВЕЧИВАНИЯ ==========
+
 FORMAL_PHRASES = {
     r'\bНа текущий момент\b': 'Сейчас',
     r'\bВ связи с этим\b': 'Поэтому',
@@ -193,8 +199,9 @@ def add_natural_variations(text: str, quality_level: int) -> str:
         # Добавляем сокращения
         if quality_level >= 5:
             sent = sent.replace('не ', 'не ')
-            if random.random() > 0.7:
-                sent = re.sub(r'\b(что|это|это)\b', r'\1', sent)
+        
+        if random.random() > 0.7:
+            sent = re.sub(r'\b(что|это)\b', r'\1', sent)
         
         new_sentences.append(sent)
     
@@ -222,8 +229,10 @@ def apply_style_mixing(text: str, quality_level: int) -> str:
             # Переставляем части абзаца местами
             sentences = para.split('. ')
             if len(sentences) > 2:
-                random.shuffle(sentences[1:])  # Перемешиваем, оставляя первое на месте
-            new_paragraphs.append('. '.join(sentences))
+                random.shuffle(sentences[1:])
+                new_paragraphs.append('. '.join(sentences))
+            else:
+                new_paragraphs.append(para)
         else:
             new_paragraphs.append(para)
     
@@ -258,6 +267,7 @@ def calculate_similarity_score(original: str, humanized: str) -> float:
     
     # Добавляем случайность для реалистичности
     similarity += random.uniform(-5, 5)
+    
     return min(max(similarity, 70), 99)
 
 # ========== API ENDPOINTS ==========
@@ -265,7 +275,6 @@ def calculate_similarity_score(original: str, humanized: str) -> float:
 @app.post("/api/humanize", response_model=HumanizeResponse)
 async def humanize_text(request: HumanizeRequest):
     """Очеловечивание текста"""
-    
     if not request.text or len(request.text) < 10:
         raise HTTPException(status_code=400, detail="Текст должен содержать минимум 10 символов")
     
@@ -304,7 +313,6 @@ async def humanize_text(request: HumanizeRequest):
 @app.post("/api/parse", response_model=ParserResponse)
 async def parse_url(request: ParserRequest):
     """Парсинг контента с сайта"""
-    
     if not request.url.startswith(('http://', 'https://')):
         raise HTTPException(status_code=400, detail="URL должен начинаться с http:// или https://")
     
@@ -400,6 +408,8 @@ async def root():
     }
 
 # ========== ЗАПУСК ==========
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
