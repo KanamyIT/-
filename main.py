@@ -3,6 +3,9 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 from pydantic import BaseModel
 import os
 import random
@@ -13,10 +16,12 @@ from typing import Optional
 import requests
 from bs4 import BeautifulSoup
 
-# NLTK опционально: если punkt нет — просто используем простой сплит
 import nltk
 from nltk.tokenize import sent_tokenize
 
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INDEX_FILE = os.path.join(BASE_DIR, "index.html")
 
 app = FastAPI(
     title="TextFlow API",
@@ -31,6 +36,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Если будет папка static/ — начнём раздавать /static/...
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+if os.path.isdir(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 class HumanizeRequest(BaseModel):
@@ -125,7 +135,6 @@ def safe_sentence_split(text: str):
         nltk.data.find("tokenizers/punkt")
         return sent_tokenize(text)
     except Exception:
-        # Важно: не делаем nltk.download() на деплое
         return re.split(r"(?<=[.!?])\s+", text.strip())
 
 
@@ -134,46 +143,58 @@ def replace_formal_phrases(text: str, quality_level: int) -> str:
     if quality_level >= 3:
         for formal, natural in FORMAL_PHRASES.items():
             result = re.sub(formal, natural, result, flags=re.IGNORECASE)
+
     if quality_level >= 5:
         for formal, natural in FORMAL_WORDS.items():
             pattern = r"\b" + re.escape(formal) + r"\b"
             result = re.sub(pattern, natural, result, flags=re.IGNORECASE)
+
     return result
 
 
 def restructure_sentences(text: str, quality_level: int) -> str:
     if quality_level < 7:
         return text
+
     sentences = safe_sentence_split(text)
     new_sentences = []
+
     for sent in sentences:
         words = sent.split()
         if len(words) > 20:
             new_sentences.extend(sent.split(", "))
         else:
             new_sentences.append(sent)
-    return ". ".join(s.strip().rstrip(".") for s in new_sentences if s.strip()).strip() + "."
+
+    joined = ". ".join(s.strip().rstrip(".") for s in new_sentences if s.strip()).strip()
+    return (joined + ".") if joined and not joined.endswith(".") else joined
 
 
 def add_natural_variations(text: str, quality_level: int) -> str:
     if quality_level < 5:
         return text
+
     sentences = safe_sentence_split(text)
     out = []
-    for i, sent in enumerate(sentences):
+
+    for sent in sentences:
         s = sent.strip()
         if not s:
             continue
+
         if quality_level >= 6 and random.random() > 0.65:
             ins = random.choice(NATURAL_INSERTIONS)
-            s = ins + " " + s[0].lower() + s[1:] if len(s) > 1 else ins + " " + s
+            s = ins + " " + (s[0].lower() + s[1:] if len(s) > 1 else s)
+
         if random.random() > 0.7:
             s = re.sub(r"\b(что|это)\b", r"\1", s)
+
         out.append(s)
+
     return " ".join(out).strip()
 
 
-def calculate_ai_detection_score(original: str, humanized: str) -> float:
+def calculate_ai_detection_score(humanized: str) -> float:
     base = 1 + random.uniform(0, 2)
     words = humanized.split()
     if len(words) > 10:
@@ -187,9 +208,19 @@ def calculate_similarity_score(original: str, humanized: str) -> float:
     hw = set(humanized.lower().split())
     if not ow:
         return 100.0
-    inter = len(ow & hw)
-    sim = (inter / len(ow)) * 100 + random.uniform(-5, 5)
+    sim = (len(ow & hw) / len(ow)) * 100 + random.uniform(-5, 5)
     return round(min(max(sim, 70), 99), 1)
+
+
+@app.get("/")
+async def site_root():
+    # Если index.html не положили рядом с main.py — покажем понятную ошибку
+    if not os.path.isfile(INDEX_FILE):
+        return {
+            "error": "index.html not found",
+            "hint": "Rename index-15.html to index.html and commit it рядом с main.py",
+        }
+    return FileResponse(INDEX_FILE)
 
 
 @app.post("/api/humanize", response_model=HumanizeResponse)
@@ -200,7 +231,8 @@ async def humanize_text(request: HumanizeRequest):
         raise HTTPException(status_code=400, detail="Уровень качества должен быть от 1 до 10")
 
     original_text = request.text
-    humanized_text = replace_formal_phrases(original_text, request.quality_level)
+    humanized_text = original_text
+    humanized_text = replace_formal_phrases(humanized_text, request.quality_level)
     humanized_text = restructure_sentences(humanized_text, request.quality_level)
     humanized_text = add_natural_variations(humanized_text, request.quality_level)
 
@@ -213,7 +245,7 @@ async def humanize_text(request: HumanizeRequest):
         humanized_text=humanized_text,
         word_count=len(humanized_text.split()),
         char_count=len(humanized_text),
-        ai_detection_score=calculate_ai_detection_score(original_text, humanized_text),
+        ai_detection_score=calculate_ai_detection_score(humanized_text),
         similarity_score=calculate_similarity_score(original_text, humanized_text),
     )
 
@@ -253,7 +285,7 @@ async def parse_url(request: ParserRequest):
             humanized_content=humanized,
             word_count=len(humanized.split()),
             parse_time=round(time.time() - t0, 2),
-            ai_detection_score=calculate_ai_detection_score(raw, humanized),
+            ai_detection_score=calculate_ai_detection_score(humanized),
             similarity_score=calculate_similarity_score(raw, humanized),
             title=title,
         )
@@ -269,11 +301,6 @@ async def parse_url(request: ParserRequest):
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "version": "1.0.0", "message": "TextFlow API is running"}
-
-
-@app.get("/")
-async def root():
-    return {"name": "TextFlow API", "version": "1.0.0"}
 
 
 if __name__ == "__main__":
